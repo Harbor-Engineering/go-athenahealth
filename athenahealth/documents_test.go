@@ -347,8 +347,11 @@ func TestHTTPClient_GetDocumentWithPages(t *testing.T) {
 		assert.Equal(2, doc.Pages[1].PageOrdering)
 	}
 
-	assert.Equal("application/pdf", doc.Originaldocument.Contenttype)
-	assert.Contains(doc.Originaldocument.Href, "/originaldocument")
+	assert.NotNil(doc.OriginalDocument)
+	if doc.OriginalDocument != nil {
+		assert.Equal("application/pdf", doc.OriginalDocument.ContentType)
+		assert.Contains(doc.OriginalDocument.Href, "/originaldocument")
+	}
 }
 
 func TestHTTPClient_GetDocumentPage(t *testing.T) {

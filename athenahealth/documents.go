@@ -741,37 +741,52 @@ func (h *HTTPClient) ListEncounterDocuments(ctx context.Context, departmentID, p
 	}, nil
 }
 
-type Document struct {
-	Originaldocument struct {
-		Contenttype string `json:"contenttype"`
-		Href        string `json:"href"`
-	} `json:"originaldocument"`
-	DocumentDescription  string         `json:"documentdescription"`
-	Status               string         `json:"status"`
-	OrderType            string         `json:"ordertype"`
-	ProviderUsername     string         `json:"providerusername"`
-	DocumentClass        string         `json:"documentclass"`
-	Priority             string         `json:"priority"`
-	DocumentTypeID       int            `json:"documenttypeid"`
-	DocumentRoute        string         `json:"documentroute"`
-	LastModifiedDateTime string         `json:"lastmodifieddatetime"`
-	ClinicalProviderID   int            `json:"clinicalproviderid"`
-	DepartmentID         string         `json:"departmentid"`
-	ProviderID           int            `json:"providerid"`
-	ClinicalDocumentID   int            `json:"clinicaldocumentid"`
-	ActionNote           string         `json:"actionnote"`
-	CreatedDateTime      string         `json:"createddatetime"`
-	CreatedDate          string         `json:"createddate"`
-	LastModifiedUser     string         `json:"lastmodifieduser"`
-	LastModifiedDate     string         `json:"lastmodifieddate"`
-	Pages                []DocumentPage `json:"pages"`
-	ObservationDate      string         `json:"observationdate"`
-	CreatedUser          string         `json:"createduser"`
-	DocumentSubclass     string         `json:"documentsubclass"`
-	DocumentSource       string         `json:"documentsource"`
+// DocumentAsset represents a document or original document with content type and href.
+type DocumentAsset struct {
+	ContentType string `json:"contenttype"`
+	Href        string `json:"href"`
 }
 
-type DocumentsAPIResponse []Document
+// Document represents a document from any document class in athenahealth.
+type Document struct {
+	// Document identification
+	ClinicalDocumentID  int    `json:"clinicaldocumentid"`
+	DocumentClass       string `json:"documentclass"`
+	DocumentSubclass    string `json:"documentsubclass"`
+	DocumentTypeID      int    `json:"documenttypeid"`
+	DocumentDescription string `json:"documentdescription"`
+
+	// Document routing and status
+	DocumentRoute  string `json:"documentroute"`
+	DocumentSource string `json:"documentsource"`
+	Status         string `json:"status"`
+	Priority       string `json:"priority"`
+	OrderType      string `json:"ordertype"`
+
+	// Provider and department info
+	DepartmentID       string `json:"departmentid"`
+	ProviderID         int    `json:"providerid"`
+	ProviderUsername   string `json:"providerusername"`
+	ClinicalProviderID int    `json:"clinicalproviderid"`
+
+	// Dates and users
+	CreatedDate          string `json:"createddate"`
+	CreatedDateTime      string `json:"createddatetime"`
+	CreatedUser          string `json:"createduser"`
+	LastModifiedDate     string `json:"lastmodifieddate"`
+	LastModifiedDateTime string `json:"lastmodifieddatetime"`
+	LastModifiedUser     string `json:"lastmodifieduser"`
+	ObservationDate      string `json:"observationdate"`
+
+	// Notes
+	ActionNote string `json:"actionnote"`
+
+	// Document content
+	OriginalDocument *DocumentAsset `json:"originaldocument,omitempty"`
+	Pages            []DocumentPage `json:"pages,omitempty"`
+}
+
+type documentsApiResponse []Document
 
 // DocumentPage represents a single page of a document.
 type DocumentPage struct {
@@ -793,7 +808,7 @@ func (h *HTTPClient) GetDocument(ctx context.Context, patientID, documentClass, 
 	}
 
 	// Handle all document types generically; the API returns the document data directly in an array with a key based on document type
-	out := &DocumentsAPIResponse{}
+	out := &documentsApiResponse{}
 	_, err := h.Get(ctx, fmt.Sprintf("/patients/%s/documents/%s/%s", patientID, documentClass, documentID), nil, out)
 	if err != nil {
 		return nil, err
