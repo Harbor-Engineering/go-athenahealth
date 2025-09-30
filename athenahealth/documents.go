@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 // AdminDocument represents an administrative document in athenahealth.
@@ -836,8 +837,34 @@ func (h *HTTPClient) GetDocumentPage(ctx context.Context, pageHref string) (io.R
 		return nil, "", fmt.Errorf("pageHref is required")
 	}
 
+	// The pageHref from the API response can be either:
+	// 1. A full URL: https://api.platform.athenahealth.com/v1/{practiceid}/patients/{patientid}/documents/{class}/{docid}/pages/{pageid}
+	// 2. A relative path: /v1/{practiceid}/patients/{patientid}/documents/{class}/{docid}/pages/{pageid}
+	// We need to extract just the path after /v1/{practiceid} since request() adds the base URL
+
+	// Strip the protocol and domain if present
+	path := pageHref
+	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
+		// Extract just the path from the full URL
+		parts := strings.SplitN(path, "/", 4) // ["https:", "", "domain", "v1/..."]
+		if len(parts) >= 4 {
+			path = "/" + parts[3]
+		}
+	}
+
+	// Now path should be like: /v1/{practiceid}/patients/...
+	// Split and skip /v1/{practiceid}
+	pathParts := strings.SplitN(path, "/", 5) // Split into ["", "v1", "{practiceid}", "patients", "..."]
+	if len(pathParts) < 4 {
+		return nil, "", fmt.Errorf("invalid pageHref format: %s", pageHref)
+	}
+
+	// Reconstruct the path without the /v1/{practiceid} prefix
+	// The request method will add the baseURL which includes /v1/{practiceid}
+	relativePath := "/" + strings.Join(pathParts[3:], "/")
+
 	// Use the request method directly to get raw response body
-	resp, err := h.request(ctx, http.MethodGet, pageHref, nil, nil, nil)
+	resp, err := h.request(ctx, http.MethodGet, relativePath, nil, nil, nil)
 	if err != nil {
 		return nil, "", err
 	}
