@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"strconv"
 )
@@ -738,4 +739,110 @@ func (h *HTTPClient) ListEncounterDocuments(ctx context.Context, departmentID, p
 		EncounterDocuments: out.EncounterDocuments,
 		Pagination:         makePaginationResult(out.Next, out.Previous, out.TotalCount),
 	}, nil
+}
+
+// DocumentAsset represents a document or original document with content type and href.
+type DocumentAsset struct {
+	ContentType string `json:"contenttype"`
+	Href        string `json:"href"`
+}
+
+// Document represents a document from any document class in athenahealth.
+type Document struct {
+	// Document identification
+	ClinicalDocumentID  int    `json:"clinicaldocumentid"`
+	DocumentClass       string `json:"documentclass"`
+	DocumentSubclass    string `json:"documentsubclass"`
+	DocumentTypeID      int    `json:"documenttypeid"`
+	DocumentDescription string `json:"documentdescription"`
+
+	// Document routing and status
+	DocumentRoute  string `json:"documentroute"`
+	DocumentSource string `json:"documentsource"`
+	Status         string `json:"status"`
+	Priority       string `json:"priority"`
+	OrderType      string `json:"ordertype"`
+
+	// Provider and department info
+	DepartmentID       string `json:"departmentid"`
+	ProviderID         int    `json:"providerid"`
+	ProviderUsername   string `json:"providerusername"`
+	ClinicalProviderID int    `json:"clinicalproviderid"`
+
+	// Dates and users
+	CreatedDate          string `json:"createddate"`
+	CreatedDateTime      string `json:"createddatetime"`
+	CreatedUser          string `json:"createduser"`
+	LastModifiedDate     string `json:"lastmodifieddate"`
+	LastModifiedDateTime string `json:"lastmodifieddatetime"`
+	LastModifiedUser     string `json:"lastmodifieduser"`
+	ObservationDate      string `json:"observationdate"`
+
+	// Notes
+	ActionNote string `json:"actionnote"`
+
+	// Document content
+	OriginalDocument *DocumentAsset `json:"originaldocument,omitempty"`
+	Pages            []DocumentPage `json:"pages,omitempty"`
+}
+
+type documentsApiResponse []Document
+
+// DocumentPage represents a single page of a document.
+type DocumentPage struct {
+	ContentType  string `json:"contenttype"`
+	Href         string `json:"href"`
+	PageID       string `json:"pageid"`
+	PageOrdering int    `json:"pageordering"`
+}
+
+// GetDocument - Get a specific document of any class with page information
+//
+// GET /v1/{practiceid}/patients/{patientid}/documents/{documentclass}/{documentid}
+//
+// documentClass should be lowercase (e.g., "clinicaldocument", "admin", "encounterdocument")
+// https://docs.athenahealth.com/api/api-ref/document
+func (h *HTTPClient) GetDocument(ctx context.Context, patientID, documentClass, documentID string) (*Document, error) {
+	if patientID == "" || documentClass == "" || documentID == "" {
+		return nil, fmt.Errorf("patientID, documentClass, and documentID are required")
+	}
+
+	// Handle all document types generically; the API returns the document data directly in an array with a key based on document type
+	out := &documentsApiResponse{}
+	_, err := h.Get(ctx, fmt.Sprintf("/patients/%s/documents/%s/%s", patientID, documentClass, documentID), nil, out)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(*out) == 0 {
+		return nil, fmt.Errorf("no document found")
+	}
+	if len(*out) > 1 {
+		return nil, fmt.Errorf("multiple documents found")
+	}
+
+	// Return the single document found
+	return &(*out)[0], nil
+}
+
+// GetDocumentPage - Get the raw content (image/PDF) of a document page
+//
+// GET {pageHref}
+//
+// This method takes the href from a DocumentPage and returns the raw image/PDF data.
+// The caller is responsible for closing the returned io.ReadCloser.
+func (h *HTTPClient) GetDocumentPage(ctx context.Context, pageHref string) (io.ReadCloser, string, error) {
+	if pageHref == "" {
+		return nil, "", fmt.Errorf("pageHref is required")
+	}
+
+	// Use the request method directly to get raw response body
+	resp, err := h.request(ctx, http.MethodGet, pageHref, nil, nil, nil)
+	if err != nil {
+		return nil, "", err
+	}
+
+	contentType := resp.Header.Get("Content-Type")
+
+	return resp.Body, contentType, nil
 }
