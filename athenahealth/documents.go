@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"strconv"
 )
@@ -738,4 +739,95 @@ func (h *HTTPClient) ListEncounterDocuments(ctx context.Context, departmentID, p
 		EncounterDocuments: out.EncounterDocuments,
 		Pagination:         makePaginationResult(out.Next, out.Previous, out.TotalCount),
 	}, nil
+}
+
+type Document struct {
+	Originaldocument struct {
+		Contenttype string `json:"contenttype"`
+		Href        string `json:"href"`
+	} `json:"originaldocument"`
+	DocumentDescription  string         `json:"documentdescription"`
+	Status               string         `json:"status"`
+	OrderType            string         `json:"ordertype"`
+	ProviderUsername     string         `json:"providerusername"`
+	DocumentClass        string         `json:"documentclass"`
+	Priority             string         `json:"priority"`
+	DocumentTypeID       int            `json:"documenttypeid"`
+	DocumentRoute        string         `json:"documentroute"`
+	LastModifiedDateTime string         `json:"lastmodifieddatetime"`
+	ClinicalProviderID   int            `json:"clinicalproviderid"`
+	DepartmentID         string         `json:"departmentid"`
+	ProviderID           int            `json:"providerid"`
+	ClinicalDocumentID   int            `json:"clinicaldocumentid"`
+	ActionNote           string         `json:"actionnote"`
+	CreatedDateTime      string         `json:"createddatetime"`
+	CreatedDate          string         `json:"createddate"`
+	LastModifiedUser     string         `json:"lastmodifieduser"`
+	LastModifiedDate     string         `json:"lastmodifieddate"`
+	Pages                []DocumentPage `json:"pages"`
+	ObservationDate      string         `json:"observationdate"`
+	CreatedUser          string         `json:"createduser"`
+	DocumentSubclass     string         `json:"documentsubclass"`
+	DocumentSource       string         `json:"documentsource"`
+}
+
+type DocumentsAPIResponse []Document
+
+// DocumentPage represents a single page of a document.
+type DocumentPage struct {
+	ContentType  string `json:"contenttype"`
+	Href         string `json:"href"`
+	PageID       string `json:"pageid"`
+	PageOrdering int    `json:"pageordering"`
+}
+
+// GetDocument - Get a specific document of any class with page information
+//
+// GET /v1/{practiceid}/patients/{patientid}/documents/{documentclass}/{documentid}
+//
+// documentClass should be lowercase (e.g., "clinicaldocument", "admin", "encounterdocument")
+// https://docs.athenahealth.com/api/api-ref/document
+func (h *HTTPClient) GetDocument(ctx context.Context, patientID, documentClass, documentID string) (*Document, error) {
+	if patientID == "" || documentClass == "" || documentID == "" {
+		return nil, fmt.Errorf("patientID, documentClass, and documentID are required")
+	}
+
+	// Handle all document types generically; the API returns the document data directly in an array with a key based on document type
+	out := &DocumentsAPIResponse{}
+	_, err := h.Get(ctx, fmt.Sprintf("/patients/%s/documents/%s/%s", patientID, documentClass, documentID), nil, out)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(*out) == 0 {
+		return nil, fmt.Errorf("no document found")
+	}
+	if len(*out) > 1 {
+		return nil, fmt.Errorf("multiple documents found")
+	}
+
+	// Return the single document found
+	return &(*out)[0], nil
+}
+
+// GetDocumentPage - Get the raw content (image/PDF) of a document page
+//
+// GET {pageHref}
+//
+// This method takes the href from a DocumentPage and returns the raw image/PDF data.
+// The caller is responsible for closing the returned io.ReadCloser.
+func (h *HTTPClient) GetDocumentPage(ctx context.Context, pageHref string) (io.ReadCloser, string, error) {
+	if pageHref == "" {
+		return nil, "", fmt.Errorf("pageHref is required")
+	}
+
+	// Use the request method directly to get raw response body
+	resp, err := h.request(ctx, http.MethodGet, pageHref, nil, nil, nil)
+	if err != nil {
+		return nil, "", err
+	}
+
+	contentType := resp.Header.Get("Content-Type")
+
+	return resp.Body, contentType, nil
 }

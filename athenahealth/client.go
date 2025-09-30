@@ -38,6 +38,8 @@ type Client interface {
 	AddClinicalDocumentReader(ctx context.Context, patientID string, opts *AddClinicalDocumentReaderOptions) (*AddClinicalDocumentResponse, error)
 	AddPatientCaseDocument(ctx context.Context, patientID string, opts *AddPatientCaseDocumentOptions) (int, error)
 	DeleteClinicalDocument(ctx context.Context, patientID string, clinicalDocumentID string) (*DeleteClinicalDocumentResponse, error)
+	GetDocument(ctx context.Context, patientID, documentClass, documentID string) (*Document, error)
+	GetDocumentPage(ctx context.Context, pageHref string) (io.ReadCloser, string, error)
 
 	// Patient Custom Fields
 	ListPatientsMatchingCustomField(ctx context.Context, opts *ListPatientsMatchingCustomFieldOptions) (*ListPatientsMatchingCustomFieldResult, error)
