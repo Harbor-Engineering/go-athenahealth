@@ -38,6 +38,8 @@ type Client interface {
 	AddClinicalDocumentReader(ctx context.Context, patientID string, opts *AddClinicalDocumentReaderOptions) (*AddClinicalDocumentResponse, error)
 	AddPatientCaseDocument(ctx context.Context, patientID string, opts *AddPatientCaseDocumentOptions) (int, error)
 	DeleteClinicalDocument(ctx context.Context, patientID string, clinicalDocumentID string) (*DeleteClinicalDocumentResponse, error)
+	GetDocument(ctx context.Context, patientID, documentClass, documentID string) (*Document, error)
+	GetDocumentPage(ctx context.Context, pageHref string) (io.ReadCloser, string, error)
 
 	// Patient Custom Fields
 	ListPatientsMatchingCustomField(ctx context.Context, opts *ListPatientsMatchingCustomFieldOptions) (*ListPatientsMatchingCustomFieldResult, error)
@@ -127,6 +129,10 @@ type Client interface {
 	ListChangedPatients(context.Context, *ListChangedPatientOptions) ([]*Patient, error)
 	ListChangedProviders(context.Context, *ListChangedProviderOptions) ([]*Provider, error)
 	ListChangedProblems(context.Context, *ListChangedProblemsOptions) ([]*ChangedProblem, error)
+	ListChangedPrescriptions(ctx context.Context, options *ListChangedPrescriptionsOptions) (*ListChangedPrescriptionsResult, error)
+
+	// Prescriptions
+	UpdatePrescription(ctx context.Context, departmentID int, patientID int, documentID int, opts *UpdatePrescriptionOptions) (*UpdatePrescriptionResult, error)
 
 	// Claims
 	CreateFinancialClaim(ctx context.Context, opts *CreateClaimOptions) ([]string, error)

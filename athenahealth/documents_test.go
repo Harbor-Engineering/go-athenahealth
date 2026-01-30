@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -287,4 +288,98 @@ func TestHTTPClient_ListEncounterDocuments(t *testing.T) {
 	assert.Equal(res.Pagination.PreviousOffset, 10)
 	assert.Equal(res.Pagination.TotalCount, 1)
 	assert.NoError(err)
+}
+
+func TestHTTPClient_GetDocument(t *testing.T) {
+	assert := assert.New(t)
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("/patients/123/documents/clinicaldocument/101", r.URL.Path)
+
+		b, _ := os.ReadFile("./resources/GetDocument.json")
+		w.Write(b)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	// Test with clinicaldocument class
+	doc, err := athenaClient.GetDocument(context.Background(), "123", "clinicaldocument", "101")
+
+	assert.NoError(err)
+	assert.NotNil(doc)
+	assert.Equal(101, doc.ClinicalDocumentID)
+	assert.Equal("CLINICALDOCUMENT", doc.DocumentClass)
+	assert.Equal("CLINICALDOCUMENT_CONSULTNOTE", doc.DocumentSubclass)
+	assert.Len(doc.Pages, 2)
+}
+
+func TestHTTPClient_GetDocumentWithPages(t *testing.T) {
+	assert := assert.New(t)
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("/patients/123/documents/clinicaldocument/101", r.URL.Path)
+
+		b, _ := os.ReadFile("./resources/GetDocument.json")
+		w.Write(b)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	doc, err := athenaClient.GetDocument(context.Background(), "123", "clinicaldocument", "101")
+
+	assert.NoError(err)
+	assert.NotNil(doc)
+	assert.Equal(101, doc.ClinicalDocumentID)
+	assert.Equal("CLINICALDOCUMENT", doc.DocumentClass)
+	assert.Equal("CLINICALDOCUMENT_CONSULTNOTE", doc.DocumentSubclass)
+	assert.Equal("Test Clinical Document", doc.DocumentDescription)
+	assert.Len(doc.Pages, 2)
+
+	if len(doc.Pages) >= 2 {
+		assert.Equal("1001", doc.Pages[0].PageID)
+		assert.Equal(1, doc.Pages[0].PageOrdering)
+		assert.Equal("image/jpeg", doc.Pages[0].ContentType)
+		assert.Contains(doc.Pages[0].Href, "/pages/1001")
+
+		assert.Equal("1002", doc.Pages[1].PageID)
+		assert.Equal(2, doc.Pages[1].PageOrdering)
+	}
+
+	assert.NotNil(doc.OriginalDocument)
+	if doc.OriginalDocument != nil {
+		assert.Equal("application/pdf", doc.OriginalDocument.ContentType)
+		assert.Contains(doc.OriginalDocument.Href, "/originaldocument")
+	}
+}
+
+func TestHTTPClient_GetDocumentPage(t *testing.T) {
+	assert := assert.New(t)
+
+	expectedImage, _ := os.ReadFile("./resources/athena.jpg")
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Contains(r.URL.Path, "/pages/1001")
+		w.Header().Set("Content-Type", "image/jpeg")
+		w.Write(expectedImage)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	// Construct a realistic page href
+	pageHref := "/patients/123/documents/clinicaldocument/101/pages/1001"
+
+	body, contentType, err := athenaClient.GetDocumentPage(context.Background(), pageHref)
+	assert.NoError(err)
+	assert.Equal("image/jpeg", contentType)
+	assert.NotNil(body)
+
+	defer body.Close()
+
+	// Read and verify the image data
+	imageData, err := io.ReadAll(body)
+	assert.NoError(err)
+	assert.Equal(expectedImage, imageData)
 }

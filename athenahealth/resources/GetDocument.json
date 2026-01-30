@@ -1,0 +1,44 @@
+[
+    {
+        "clinicaldocumentid": 101,
+        "documentclass": "CLINICALDOCUMENT",
+        "documentsubclass": "CLINICALDOCUMENT_CONSULTNOTE",
+        "documenttypeid": 123,
+        "departmentid": "1",
+        "providerid": 456,
+        "providerusername": "jsmith",
+        "clinicalproviderid": 789,
+        "status": "CLOSED",
+        "priority": "1",
+        "documentroute": "INBOX",
+        "documentsource": "UPLOAD",
+        "documentdescription": "Test Clinical Document",
+        "ordertype": "LAB",
+        "observationdate": "09/29/2025",
+        "createddate": "09/29/2025",
+        "createddatetime": "09/29/2025 10:30:00",
+        "createduser": "jsmith",
+        "lastmodifieddate": "09/29/2025",
+        "lastmodifieddatetime": "09/29/2025 11:00:00",
+        "lastmodifieduser": "jsmith",
+        "actionnote": "Test action note",
+        "originaldocument": {
+            "contenttype": "application/pdf",
+            "href": "https://api.preview.platform.athenahealth.com/v1/195900/patients/123/documents/clinicaldocument/101/originaldocument"
+        },
+        "pages": [
+            {
+                "pageid": "1001",
+                "pageordering": 1,
+                "contenttype": "image/jpeg",
+                "href": "https://api.preview.platform.athenahealth.com/v1/195900/patients/123/documents/clinicaldocument/101/pages/1001"
+            },
+            {
+                "pageid": "1002",
+                "pageordering": 2,
+                "contenttype": "image/jpeg",
+                "href": "https://api.preview.platform.athenahealth.com/v1/195900/patients/123/documents/clinicaldocument/101/pages/1002"
+            }
+        ]
+    }
+]
