@@ -1,0 +1,54 @@
+name: Validate Release Tags
+
+# This workflow ensures that release tags are only created from the 'internal' branch
+# This prevents accidental releases from main or feature branches
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  validate-tag-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history for all branches and tags
+
+      - name: Validate tag is from internal branch
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "Validating tag: $TAG_NAME"
+
+          # Get the commit the tag points to
+          TAG_COMMIT=$(git rev-list -n 1 "$TAG_NAME")
+          echo "Tag commit: $TAG_COMMIT"
+
+          # Check if this commit exists in the internal branch
+          if git branch -r --contains "$TAG_COMMIT" | grep -q "origin/internal"; then
+            echo "✓ Tag $TAG_NAME is correctly created from the internal branch"
+          else
+            echo "✗ ERROR: Tag $TAG_NAME was not created from the internal branch"
+            echo ""
+            echo "All release tags must be created from the 'internal' branch."
+            echo "Please delete this tag and create it from the correct branch:"
+            echo ""
+            echo "  git tag -d $TAG_NAME"
+            echo "  git push origin :refs/tags/$TAG_NAME"
+            echo "  git checkout internal"
+            echo "  git tag -a $TAG_NAME -m \"Release $TAG_NAME\""
+            echo "  git push origin $TAG_NAME"
+            exit 1
+          fi
+
+      - name: Validate version format
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          if [[ ! $TAG_NAME =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-.*)?$ ]]; then
+            echo "✗ ERROR: Invalid version format: $TAG_NAME"
+            echo "Version must be in format: vX.Y.Z or vX.Y.Z-suffix"
+            exit 1
+          fi
+          echo "✓ Version format is valid"

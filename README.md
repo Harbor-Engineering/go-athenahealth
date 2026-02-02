@@ -59,6 +59,43 @@ xRequestId := req.Header.Get(athenahealth.XRequestIDHeaderKey))
 
 See the athena [Best Practices](https://docs.athenahealth.com/api/guides/best-practices) guide for more details about X-Request-Id and other recommended  practices.
 
+## Contributing
+
+See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for development guidelines.
+
+### Release Process
+
+**Important**: This repository uses a special branching strategy for releases.
+
+- **`main`** - Development branch synced with upstream
+- **`internal`** - Release branch where all version tags are created
+
+All releases MUST be tagged from the `internal` branch. To create a release:
+
+```bash
+# Ensure you're on internal branch with latest changes
+git checkout internal
+git pull origin internal
+
+# Use the automated release script
+make release VERSION=v0.0.4
+```
+
+The release script will:
+- ✅ Validate you're on the `internal` branch
+- ✅ Check version format
+- ✅ Verify branch is up to date
+- ✅ Create and push the tag
+- ✅ Trigger CI/CD workflows
+
+**Safety mechanisms**:
+- Git hook prevents pushing tags from wrong branch
+- GitHub Action validates all tags come from `internal`
+- Release script automates the correct workflow
+- Branch protection (recommended) prevents accidental commits
+
+See [RELEASING.md](RELEASING.md) for detailed release documentation.
+
 ## Method Signatures Required vs. Optional Fields
 
 All methods that perform network or filesystem IO will accept a context for idiomatic propagation.
@@ -97,7 +134,7 @@ type Client interface {
 > [samber/lo#toptr](https://github.com/samber/lo#toptr) or a custom rolled to-pointer helper is recommended to improve the ergonomics of passing the optional pointer fields
 > ```go
 > func ToPtr[T any](x T) *T { return &x }
-> ``` 
+> ```
 
 Required fields should be checked for invalid zero values to prevent unnecessary error-prone calls to athena and surface clearer errors, relying on `errors.Join` to improve DX and prevent waterfalling errors.
 
