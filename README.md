@@ -77,8 +77,11 @@ All releases MUST be tagged from the `internal` branch. To create a release:
 git checkout internal
 git pull origin internal
 
-# Use the automated release script
+# Create and push the tag
 make release VERSION=v0.0.4
+
+# Create the GitHub release (requires GitHub CLI)
+make github-release VERSION=v0.0.4
 ```
 
 The release script will:
