@@ -136,3 +136,107 @@ func (h *HTTPClient) DeleteRiskContract(ctx context.Context, patientID string, r
 
 	return nil
 }
+
+// RiskContractReference represents a risk contract in the population management system
+type RiskContractReference struct {
+	Description    string `json:"description"`
+	ErrorMessage   string `json:"errormessage"`
+	Name           string `json:"name"`
+	RiskContractID int    `json:"riskcontractid"`
+	Success        string `json:"success"`
+}
+
+// GetRiskContractReferenceOptions represents options for getting a risk contract reference
+type GetRiskContractReferenceOptions struct {
+	// Risk contract ID to retrieve (use either RiskContractID or Name)
+	RiskContractID int
+	// Name of the risk contract to retrieve (use either RiskContractID or Name)
+	Name string
+}
+
+// GetRiskContractReference - Get basic/default risk contract information
+//
+// GET /v1/{practiceid}/populationmanagement/riskcontract
+//
+// https://docs.athenahealth.com/api/api-ref/risk-contract-reference
+func (h *HTTPClient) GetRiskContractReference(ctx context.Context, opts *GetRiskContractReferenceOptions) (*RiskContractReference, error) {
+	if opts == nil {
+		panic("opts is nil")
+	}
+
+	if opts.RiskContractID == 0 && opts.Name == "" {
+		panic("either RiskContractID or Name must be provided")
+	}
+
+	out := []*RiskContractReference{}
+
+	q := url.Values{}
+
+	if opts.RiskContractID > 0 {
+		q.Add("riskcontractid", strconv.Itoa(opts.RiskContractID))
+	}
+
+	if opts.Name != "" {
+		q.Add("name", opts.Name)
+	}
+
+	_, err := h.Get(ctx, "/populationmanagement/riskcontract", q, &out)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(out) == 0 {
+		return nil, fmt.Errorf("risk contract not found")
+	}
+
+	return out[0], nil
+}
+
+// UpdateRiskContractReferenceOptions represents options for updating/creating a risk contract reference
+type UpdateRiskContractReferenceOptions struct {
+	// Risk contract ID (optional for creation, required for update)
+	RiskContractID int
+	// Risk contract name/title (required)
+	Name string
+	// Risk contract description (optional)
+	Description string
+}
+
+// UpdateRiskContractReference - Update or create basic/default risk contract information
+//
+// PUT /v1/{practiceid}/populationmanagement/riskcontract
+//
+// https://docs.athenahealth.com/api/api-ref/risk-contract-reference
+func (h *HTTPClient) UpdateRiskContractReference(ctx context.Context, opts *UpdateRiskContractReferenceOptions) (*RiskContractReference, error) {
+	if opts == nil {
+		panic("opts is nil")
+	}
+
+	if opts.Name == "" {
+		panic("Name is required")
+	}
+
+	out := []*RiskContractReference{}
+
+	form := url.Values{}
+	form.Add("name", opts.Name)
+
+	if opts.RiskContractID > 0 {
+		form.Add("riskcontractid", strconv.Itoa(opts.RiskContractID))
+	}
+
+	if opts.Description != "" {
+		form.Add("description", opts.Description)
+	}
+
+	_, err := h.PutForm(ctx, "/populationmanagement/riskcontract", form, &out)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(out) == 0 {
+		return nil, fmt.Errorf("failed to update risk contract reference")
+	}
+
+	return out[0], nil
+}
