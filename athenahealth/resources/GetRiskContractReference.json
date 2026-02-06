@@ -2,5 +2,5 @@
   "description": "Medicare Advantage risk sharing contract for value-based care",
   "name": "Medicare Advantage Contract",
   "riskcontractid": 123,
-  "success": "true"
+  "success": true
 }

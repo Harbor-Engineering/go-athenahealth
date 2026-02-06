@@ -63,6 +63,40 @@ See the athena [Best Practices](https://docs.athenahealth.com/api/guides/best-pr
 
 See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for development guidelines.
 
+## Integration Testing
+
+This repository includes an integration test harness for validating API endpoints against the actual athenahealth API. This is useful when:
+
+- Adding new API endpoints
+- Debugging response format issues
+- Verifying API documentation accuracy
+
+### Running Integration Tests
+
+```bash
+# Set your credentials (required)
+export ATHENA_PRACTICE_ID=your-practice-id
+export ATHENA_API_KEY=your-api-key
+export ATHENA_API_SECRET=your-api-secret
+
+# Run all integration tests
+go test -v -run TestIntegration ./athenahealth
+
+# Or use the helper script
+./scripts/run-integration-tests.sh
+```
+
+### Viewing Raw API Responses
+
+Integration tests include special "RawResponse" tests that show the actual JSON returned by the API:
+
+```bash
+# See raw responses for risk contract endpoints
+go test -v -run TestIntegration_.*_RawResponse ./athenahealth
+```
+
+See [athenahealth/INTEGRATION_TESTS.md](athenahealth/INTEGRATION_TESTS.md) for detailed documentation on writing and running integration tests.
+
 ### Release Process
 
 **Important**: This repository uses a special branching strategy for releases.

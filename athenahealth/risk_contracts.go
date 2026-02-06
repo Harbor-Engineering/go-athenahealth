@@ -143,7 +143,7 @@ type RiskContractReference struct {
 	ErrorMessage   string `json:"errormessage"`
 	Name           string `json:"name"`
 	RiskContractID int    `json:"riskcontractid"`
-	Success        string `json:"success"`
+	Success        bool   `json:"success"`
 }
 
 // GetRiskContractReferenceOptions represents options for getting a risk contract reference
