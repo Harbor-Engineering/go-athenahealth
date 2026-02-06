@@ -168,7 +168,7 @@ func (h *HTTPClient) GetRiskContractReference(ctx context.Context, opts *GetRisk
 		panic("either RiskContractID or Name must be provided")
 	}
 
-	out := []*RiskContractReference{}
+	out := &RiskContractReference{}
 
 	q := url.Values{}
 
@@ -180,16 +180,12 @@ func (h *HTTPClient) GetRiskContractReference(ctx context.Context, opts *GetRisk
 		q.Add("name", opts.Name)
 	}
 
-	_, err := h.Get(ctx, "/populationmanagement/riskcontract", q, &out)
+	_, err := h.Get(ctx, "/populationmanagement/riskcontract", q, out)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(out) == 0 {
-		return nil, fmt.Errorf("risk contract not found")
-	}
-
-	return out[0], nil
+	return out, nil
 }
 
 // UpdateRiskContractReferenceOptions represents options for updating/creating a risk contract reference
@@ -216,7 +212,7 @@ func (h *HTTPClient) UpdateRiskContractReference(ctx context.Context, opts *Upda
 		panic("Name is required")
 	}
 
-	out := []*RiskContractReference{}
+	out := &RiskContractReference{}
 
 	form := url.Values{}
 	form.Add("name", opts.Name)
@@ -229,14 +225,10 @@ func (h *HTTPClient) UpdateRiskContractReference(ctx context.Context, opts *Upda
 		form.Add("description", opts.Description)
 	}
 
-	_, err := h.PutForm(ctx, "/populationmanagement/riskcontract", form, &out)
+	_, err := h.PutForm(ctx, "/populationmanagement/riskcontract", form, out)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(out) == 0 {
-		return nil, fmt.Errorf("failed to update risk contract reference")
-	}
-
-	return out[0], nil
+	return out, nil
 }

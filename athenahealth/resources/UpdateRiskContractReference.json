@@ -1,6 +1,4 @@
-[
-  {
-    "riskcontractid": 789,
-    "success": "true"
-  }
-]
+{
+  "riskcontractid": 789,
+  "success": "true"
+}
