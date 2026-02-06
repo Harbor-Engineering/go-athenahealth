@@ -11,14 +11,19 @@ import (
 )
 
 // IntegrationTestClient creates a real HTTP client for integration testing.
-// Requires the following environment variables:
+// Integration tests are SKIPPED by default and require explicit opt-in.
+//
+// To run integration tests, set:
+//   - ATHENA_RUN_INTEGRATION_TESTS=true (required to enable)
 //   - ATHENA_PRACTICE_ID
 //   - ATHENA_CLIENT_ID (or ATHENA_API_KEY)
 //   - ATHENA_CLIENT_SECRET (or ATHENA_API_SECRET)
-//
-// Will fail the test if any required credentials are missing.
 func IntegrationTestClient(t *testing.T) *HTTPClient {
 	t.Helper()
+
+	if os.Getenv("ATHENA_RUN_INTEGRATION_TESTS") != "true" {
+		t.Skip("Skipping integration test: Set ATHENA_RUN_INTEGRATION_TESTS=true to run")
+	}
 
 	practiceID := os.Getenv("ATHENA_PRACTICE_ID")
 
@@ -34,7 +39,7 @@ func IntegrationTestClient(t *testing.T) *HTTPClient {
 	}
 
 	if practiceID == "" || clientID == "" || clientSecret == "" {
-		t.Fatal("Required environment variables not set: ATHENA_PRACTICE_ID, ATHENA_CLIENT_ID (or ATHENA_API_KEY), ATHENA_CLIENT_SECRET (or ATHENA_API_SECRET)")
+		t.Fatal("Required environment variables not set: ATHENA_PRACTICE_ID, ATHENA_CLIENT_ID/ATHENA_API_KEY, ATHENA_CLIENT_SECRET/ATHENA_API_SECRET")
 	}
 
 	client := NewHTTPClient(http.DefaultClient, practiceID, clientID, clientSecret)

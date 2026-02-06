@@ -45,6 +45,9 @@ fi
 
 echo ""
 
+# Enable integration tests
+export ATHENA_RUN_INTEGRATION_TESTS=true
+
 # Determine which tests to run
 TEST_PATTERN="${1:-TestIntegration}"
 

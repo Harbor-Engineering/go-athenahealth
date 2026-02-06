@@ -9,8 +9,8 @@ import (
 
 // RiskContract represents a risk contract associated with a patient
 type RiskContract struct {
-	ContractName  string `json:"contractname"`
-	EffectiveDate string `json:"effectivedate"`
+	ContractName   string `json:"contractname"`
+	EffectiveDate  string `json:"effectivedate"`
 	ExpirationDate string `json:"expirationdate"`
 	RiskContractID int    `json:"riskcontractid"`
 }
@@ -98,7 +98,7 @@ func (h *HTTPClient) CreateRiskContract(ctx context.Context, patientID string, o
 
 // DeleteRiskContractOptions represents options for deleting a risk contract
 type DeleteRiskContractOptions struct {
-	DepartmentID int  // Department ID (optional)
+	DepartmentID int // Department ID (optional)
 	// If true, apply this delete to all charts associated with the given patient
 	AllCharts bool
 }

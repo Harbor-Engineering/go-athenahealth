@@ -74,7 +74,8 @@ This repository includes an integration test harness for validating API endpoint
 ### Running Integration Tests
 
 ```bash
-# Set your credentials (required)
+# Integration tests require explicit opt-in
+export ATHENA_RUN_INTEGRATION_TESTS=true
 export ATHENA_PRACTICE_ID=your-practice-id
 export ATHENA_API_KEY=your-api-key
 export ATHENA_API_SECRET=your-api-secret
@@ -82,7 +83,7 @@ export ATHENA_API_SECRET=your-api-secret
 # Run all integration tests
 go test -v -run TestIntegration ./athenahealth
 
-# Or use the helper script
+# Or use the helper script (sets the flag automatically)
 ./scripts/run-integration-tests.sh
 ```
 

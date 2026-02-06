@@ -5,6 +5,9 @@ This example demonstrates how to use the integration test harness to validate th
 ## Step 1: Set up your environment
 
 ```bash
+# Enable integration tests (required)
+export ATHENA_RUN_INTEGRATION_TESTS=true
+
 export ATHENA_PRACTICE_ID=your-practice-id
 export ATHENA_API_KEY=your-api-key
 export ATHENA_API_SECRET=your-api-secret

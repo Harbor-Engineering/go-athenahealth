@@ -4,15 +4,16 @@ This directory contains integration tests that make real API calls to the athena
 
 ## Setup
 
+Integration tests are **skipped by default** and require explicit opt-in.
+
 Set the following environment variables before running integration tests:
 
 ```bash
+export ATHENA_RUN_INTEGRATION_TESTS=true  # Required to enable integration tests
 export ATHENA_PRACTICE_ID=your-practice-id
 export ATHENA_API_KEY=your-api-key
 export ATHENA_API_SECRET=your-api-secret
 ```
-
-These environment variables are **required** - integration tests will fail if they are not set.
 
 ## Running Integration Tests
 
