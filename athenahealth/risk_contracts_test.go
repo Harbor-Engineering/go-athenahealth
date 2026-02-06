@@ -266,7 +266,7 @@ func TestHTTPClient_GetRiskContractReference_ByID(t *testing.T) {
 	assert.Equal("Medicare Advantage Contract", contract.Name)
 	assert.Equal("Medicare Advantage risk sharing contract for value-based care", contract.Description)
 	assert.Equal(123, contract.RiskContractID)
-	assert.Equal("true", contract.Success)
+	assert.True(contract.Success)
 }
 
 func TestHTTPClient_GetRiskContractReference_ByName(t *testing.T) {
@@ -324,7 +324,7 @@ func TestHTTPClient_UpdateRiskContractReference_Create(t *testing.T) {
 	assert.NoError(err)
 	assert.NotNil(contract)
 	assert.Equal(789, contract.RiskContractID)
-	assert.Equal("true", contract.Success)
+	assert.True(contract.Success)
 }
 
 func TestHTTPClient_UpdateRiskContractReference_Update(t *testing.T) {
@@ -356,7 +356,7 @@ func TestHTTPClient_UpdateRiskContractReference_Update(t *testing.T) {
 	assert.NoError(err)
 	assert.NotNil(contract)
 	assert.Equal(789, contract.RiskContractID)
-	assert.Equal("true", contract.Success)
+	assert.True(contract.Success)
 }
 
 func TestHTTPClient_UpdateRiskContractReference_NameOnly(t *testing.T) {

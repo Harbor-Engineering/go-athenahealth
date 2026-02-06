@@ -1,10 +1,13 @@
-all: tidy format build test
+all: tidy format lint build test
 
 build:
 	go build ./...
 
 format:
 	go fmt ./...
+
+lint:
+	golangci-lint run --timeout=5m --tests=false
 
 test:
 	go test ./... -race
