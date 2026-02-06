@@ -70,7 +70,7 @@ func (h *HTTPClient) CreateRiskContract(ctx context.Context, patientID string, o
 		panic("opts is nil")
 	}
 
-	out := &MessageResponse{}
+	out := &IntegerSuccessResponse{}
 
 	form := url.Values{}
 	form.Add("riskcontractid", strconv.Itoa(opts.RiskContractID))
@@ -109,7 +109,7 @@ type DeleteRiskContractOptions struct {
 //
 // https://docs.athenahealth.com/api/api-ref/patient-risk-contract
 func (h *HTTPClient) DeleteRiskContract(ctx context.Context, patientID string, riskContractID int, opts *DeleteRiskContractOptions) error {
-	out := &MessageResponse{}
+	out := &IntegerSuccessResponse{}
 
 	path := fmt.Sprintf("/chart/%s/riskcontract/%d", patientID, riskContractID)
 
