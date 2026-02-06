@@ -238,3 +238,151 @@ func TestHTTPClient_DeleteRiskContract_WithOptions(t *testing.T) {
 	err := athenaClient.DeleteRiskContract(context.Background(), patientID, riskContractID, opts)
 	assert.NoError(err)
 }
+
+func TestHTTPClient_GetRiskContractReference_ByID(t *testing.T) {
+	assert := assert.New(t)
+
+	riskContractID := 123
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("/populationmanagement/riskcontract", r.URL.Path)
+		assert.Equal(http.MethodGet, r.Method)
+		assert.Equal(strconv.Itoa(riskContractID), r.URL.Query().Get("riskcontractid"))
+
+		b, _ := os.ReadFile("./resources/GetRiskContractReference.json")
+		w.Write(b)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	opts := &GetRiskContractReferenceOptions{
+		RiskContractID: riskContractID,
+	}
+
+	contract, err := athenaClient.GetRiskContractReference(context.Background(), opts)
+	assert.NoError(err)
+	assert.NotNil(contract)
+	assert.Equal("Medicare Advantage Contract", contract.Name)
+	assert.Equal("Medicare Advantage risk sharing contract for value-based care", contract.Description)
+	assert.Equal(123, contract.RiskContractID)
+	assert.Equal("true", contract.Success)
+}
+
+func TestHTTPClient_GetRiskContractReference_ByName(t *testing.T) {
+	assert := assert.New(t)
+
+	contractName := "Medicare Advantage Contract"
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("/populationmanagement/riskcontract", r.URL.Path)
+		assert.Equal(http.MethodGet, r.Method)
+		assert.Equal(contractName, r.URL.Query().Get("name"))
+
+		b, _ := os.ReadFile("./resources/GetRiskContractReference.json")
+		w.Write(b)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	opts := &GetRiskContractReferenceOptions{
+		Name: contractName,
+	}
+
+	contract, err := athenaClient.GetRiskContractReference(context.Background(), opts)
+	assert.NoError(err)
+	assert.NotNil(contract)
+	assert.Equal("Medicare Advantage Contract", contract.Name)
+}
+
+func TestHTTPClient_UpdateRiskContractReference_Create(t *testing.T) {
+	assert := assert.New(t)
+
+	opts := &UpdateRiskContractReferenceOptions{
+		Name:        "New Risk Contract",
+		Description: "A new risk contract for testing",
+	}
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("/populationmanagement/riskcontract", r.URL.Path)
+		assert.Equal(http.MethodPut, r.Method)
+
+		assert.NoError(r.ParseForm())
+		assert.Equal(opts.Name, r.Form.Get("name"))
+		assert.Equal(opts.Description, r.Form.Get("description"))
+		assert.Empty(r.Form.Get("riskcontractid"))
+
+		b, _ := os.ReadFile("./resources/UpdateRiskContractReference.json")
+		w.Write(b)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	contract, err := athenaClient.UpdateRiskContractReference(context.Background(), opts)
+	assert.NoError(err)
+	assert.NotNil(contract)
+	assert.Equal(789, contract.RiskContractID)
+	assert.Equal("true", contract.Success)
+}
+
+func TestHTTPClient_UpdateRiskContractReference_Update(t *testing.T) {
+	assert := assert.New(t)
+
+	opts := &UpdateRiskContractReferenceOptions{
+		RiskContractID: 123,
+		Name:           "Updated Risk Contract",
+		Description:    "An updated risk contract",
+	}
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("/populationmanagement/riskcontract", r.URL.Path)
+		assert.Equal(http.MethodPut, r.Method)
+
+		assert.NoError(r.ParseForm())
+		assert.Equal(strconv.Itoa(opts.RiskContractID), r.Form.Get("riskcontractid"))
+		assert.Equal(opts.Name, r.Form.Get("name"))
+		assert.Equal(opts.Description, r.Form.Get("description"))
+
+		b, _ := os.ReadFile("./resources/UpdateRiskContractReference.json")
+		w.Write(b)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	contract, err := athenaClient.UpdateRiskContractReference(context.Background(), opts)
+	assert.NoError(err)
+	assert.NotNil(contract)
+	assert.Equal(789, contract.RiskContractID)
+	assert.Equal("true", contract.Success)
+}
+
+func TestHTTPClient_UpdateRiskContractReference_NameOnly(t *testing.T) {
+	assert := assert.New(t)
+
+	opts := &UpdateRiskContractReferenceOptions{
+		Name: "Minimal Risk Contract",
+	}
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("/populationmanagement/riskcontract", r.URL.Path)
+		assert.Equal(http.MethodPut, r.Method)
+
+		assert.NoError(r.ParseForm())
+		assert.Equal(opts.Name, r.Form.Get("name"))
+		assert.Empty(r.Form.Get("description"))
+		assert.Empty(r.Form.Get("riskcontractid"))
+
+		b, _ := os.ReadFile("./resources/UpdateRiskContractReference.json")
+		w.Write(b)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	contract, err := athenaClient.UpdateRiskContractReference(context.Background(), opts)
+	assert.NoError(err)
+	assert.NotNil(contract)
+}
