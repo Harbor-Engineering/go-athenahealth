@@ -78,6 +78,7 @@ func TestRawAPIResponse(t *testing.T, client *HTTPClient, method, path string, p
 		resp, err = client.PostForm(ctx, path, params, nil)
 	case http.MethodDelete:
 		resp, err = client.Delete(ctx, path, nil, nil)
+	default:
 		t.Fatalf("Unsupported method: %s", method)
 	}
 
@@ -85,7 +86,7 @@ func TestRawAPIResponse(t *testing.T, client *HTTPClient, method, path string, p
 		t.Fatalf("API call failed: %v", err)
 	}
 
-	if resp != nil && resp.Body != nil {
+	if resp.Body != nil {
 		defer resp.Body.Close()
 
 		var responseData interface{}
