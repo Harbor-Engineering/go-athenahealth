@@ -64,7 +64,7 @@ type Client interface {
 	// Patient Risk Contracts
 	ListRiskContracts(ctx context.Context, patientID string, opts *ListRiskContractsOptions) ([]*RiskContract, error)
 	CreateRiskContract(ctx context.Context, patientID string, opts *CreateRiskContractOptions) error
-	DeleteRiskContract(ctx context.Context, patientID string, riskContractID int) error
+	DeleteRiskContract(ctx context.Context, patientID string, riskContractID int, opts *DeleteRiskContractOptions) error
 
 	// Patient Lab Results
 	AddLabResultDocument(ctx context.Context, patientID string, departmentID string, opts *AddLabResultDocumentOptions) (int, error)

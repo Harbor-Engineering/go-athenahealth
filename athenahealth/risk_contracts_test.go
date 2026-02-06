@@ -72,6 +72,32 @@ func TestHTTPClient_ListRiskContracts_WithoutDepartment(t *testing.T) {
 	assert.NotNil(contracts)
 }
 
+func TestHTTPClient_ListRiskContracts_WithAllCharts(t *testing.T) {
+	assert := assert.New(t)
+
+	patientID := "123"
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("/chart/123/riskcontract", r.URL.Path)
+		assert.Equal(http.MethodGet, r.Method)
+		assert.Equal("true", r.URL.Query().Get("allcharts"))
+
+		b, _ := os.ReadFile("./resources/ListRiskContracts.json")
+		w.Write(b)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	opts := &ListRiskContractsOptions{
+		AllCharts: true,
+	}
+
+	contracts, err := athenaClient.ListRiskContracts(context.Background(), patientID, opts)
+	assert.NoError(err)
+	assert.NotNil(contracts)
+}
+
 func TestHTTPClient_CreateRiskContract(t *testing.T) {
 	assert := assert.New(t)
 
@@ -131,6 +157,40 @@ func TestHTTPClient_CreateRiskContract_WithoutExpirationDate(t *testing.T) {
 	assert.NoError(err)
 }
 
+func TestHTTPClient_CreateRiskContract_WithDepartmentIDAndAllCharts(t *testing.T) {
+	assert := assert.New(t)
+
+	patientID := "123"
+	opts := &CreateRiskContractOptions{
+		RiskContractID: 789,
+		EffectiveDate:  "01/15/2024",
+		ExpirationDate: "01/14/2025",
+		DepartmentID:   456,
+		AllCharts:      true,
+	}
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("/chart/123/riskcontract", r.URL.Path)
+		assert.Equal(http.MethodPut, r.Method)
+
+		assert.NoError(r.ParseForm())
+		assert.Equal(strconv.Itoa(opts.RiskContractID), r.Form.Get("riskcontractid"))
+		assert.Equal(opts.EffectiveDate, r.Form.Get("effectivedate"))
+		assert.Equal(opts.ExpirationDate, r.Form.Get("expirationdate"))
+		assert.Equal(strconv.Itoa(opts.DepartmentID), r.Form.Get("departmentid"))
+		assert.Equal("true", r.Form.Get("allcharts"))
+
+		b, _ := os.ReadFile("./resources/CreateRiskContract.json")
+		w.Write(b)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	err := athenaClient.CreateRiskContract(context.Background(), patientID, opts)
+	assert.NoError(err)
+}
+
 func TestHTTPClient_DeleteRiskContract(t *testing.T) {
 	assert := assert.New(t)
 
@@ -148,6 +208,33 @@ func TestHTTPClient_DeleteRiskContract(t *testing.T) {
 	athenaClient, ts := testClient(h)
 	defer ts.Close()
 
-	err := athenaClient.DeleteRiskContract(context.Background(), patientID, riskContractID)
+	err := athenaClient.DeleteRiskContract(context.Background(), patientID, riskContractID, nil)
+	assert.NoError(err)
+}
+
+func TestHTTPClient_DeleteRiskContract_WithOptions(t *testing.T) {
+	assert := assert.New(t)
+
+	patientID := "123"
+	riskContractID := 789
+	opts := &DeleteRiskContractOptions{
+		DepartmentID: 456,
+		AllCharts:    true,
+	}
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("/chart/123/riskcontract/789", r.URL.Path)
+		assert.Equal(http.MethodDelete, r.Method)
+		assert.Equal(strconv.Itoa(opts.DepartmentID), r.URL.Query().Get("departmentid"))
+		assert.Equal("true", r.URL.Query().Get("allcharts"))
+
+		b, _ := os.ReadFile("./resources/DeleteRiskContract.json")
+		w.Write(b)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	err := athenaClient.DeleteRiskContract(context.Background(), patientID, riskContractID, opts)
 	assert.NoError(err)
 }
