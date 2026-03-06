@@ -19,8 +19,55 @@ import (
 //
 // Run with: go test -v -run TestIntegration_ListChangedPatientCases ./athenahealth
 
+// ensurePatientCaseSubscription ensures the subscription is active for patient case changes.
+// Returns true if we created the subscription (caller should clean up), false if it was already active.
+func ensurePatientCaseSubscription(t *testing.T, client *HTTPClient) bool {
+	t.Helper()
+	ctx := context.Background()
+
+	// Check current subscription status
+	sub, err := client.GetSubscription(ctx, "documents/patientcase")
+	if err != nil {
+		t.Logf("GetSubscription error (subscription may not exist yet): %v", err)
+	}
+
+	// If subscription is already ACTIVE, we don't need to do anything
+	if sub != nil && sub.Status == "ACTIVE" {
+		t.Log("Patient case subscription already ACTIVE")
+		return false
+	}
+
+	if sub != nil {
+		t.Logf("Current subscription status: %s - subscribing to patient case changes", sub.Status)
+	} else {
+		t.Log("No existing subscription - subscribing to patient case changes")
+	}
+
+	// Subscribe to all events (nil options subscribes to all)
+	err = client.Subscribe(ctx, "documents/patientcase", nil)
+	if err != nil {
+		t.Fatalf("Failed to subscribe to patient case changes: %v", err)
+	}
+
+	t.Log("Successfully subscribed to patient case changes")
+	return true
+}
+
 func TestIntegration_ListChangedPatientCases_RawResponse(t *testing.T) {
 	client := IntegrationTestClient(t)
+
+	// Ensure subscription is active
+	needsCleanup := ensurePatientCaseSubscription(t, client)
+	if needsCleanup {
+		defer func() {
+			ctx := context.Background()
+			if err := client.Unsubscribe(ctx, "documents/patientcase", nil); err != nil {
+				t.Logf("Warning: Failed to unsubscribe: %v", err)
+			} else {
+				t.Log("Successfully unsubscribed from patient case changes")
+			}
+		}()
+	}
 
 	t.Log("Testing GET /documents/patientcase/changed")
 
@@ -33,6 +80,19 @@ func TestIntegration_ListChangedPatientCases_RawResponse(t *testing.T) {
 
 func TestIntegration_ListChangedPatientCases(t *testing.T) {
 	client := IntegrationTestClient(t)
+
+	// Ensure subscription is active
+	needsCleanup := ensurePatientCaseSubscription(t, client)
+	if needsCleanup {
+		defer func() {
+			ctx := context.Background()
+			if err := client.Unsubscribe(ctx, "documents/patientcase", nil); err != nil {
+				t.Logf("Warning: Failed to unsubscribe: %v", err)
+			} else {
+				t.Log("Successfully unsubscribed from patient case changes")
+			}
+		}()
+	}
 
 	ctx := context.Background()
 	opts := &ListChangedPatientCasesOptions{
@@ -69,6 +129,19 @@ func TestIntegration_ListChangedPatientCases(t *testing.T) {
 
 func TestIntegration_ListChangedPatientCases_WithPatientIDs(t *testing.T) {
 	client := IntegrationTestClient(t)
+
+	// Ensure subscription is active
+	needsCleanup := ensurePatientCaseSubscription(t, client)
+	if needsCleanup {
+		defer func() {
+			ctx := context.Background()
+			if err := client.Unsubscribe(ctx, "documents/patientcase", nil); err != nil {
+				t.Logf("Warning: Failed to unsubscribe: %v", err)
+			} else {
+				t.Log("Successfully unsubscribed from patient case changes")
+			}
+		}()
+	}
 
 	// You can optionally set ATHENA_TEST_PATIENT_ID to filter by specific patient
 	patientID := mustGetEnv(t, "ATHENA_TEST_PATIENT_ID", true)
