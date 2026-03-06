@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // AdminDocument represents an administrative document in athenahealth.
@@ -586,6 +587,119 @@ func (h *HTTPClient) AddPatientCaseDocument(ctx context.Context, patientID strin
 	}
 
 	return res.PatientCaseID, nil
+}
+
+type ListChangedPatientCasesOptions struct {
+	PatientIDs                 []string
+	LeaveUnprocessed           bool
+	ShowProcessedEndDatetime   time.Time
+	ShowProcessedStartDatetime time.Time
+
+	Pagination *PaginationOptions
+}
+
+type ChangedPatientCase struct {
+	ActionNote                  string   `json:"actionnote"`
+	AssignedTo                  string   `json:"assignedto"`
+	CallbackName                string   `json:"callbackname"`
+	CallbackNumber              string   `json:"callbacknumber"`
+	CallbackNumberType          string   `json:"callbacknumbertype"`
+	CallType                    string   `json:"calltype"`
+	ClinicalProviderID          int      `json:"clinicalproviderid"`
+	CreatedDate                 string   `json:"createddate"`
+	CreatedDateTime             string   `json:"createddatetime"`
+	CreatedDocuments            []string `json:"createddocuments"`
+	CreatedUser                 string   `json:"createduser"`
+	DeletedDateTime             string   `json:"deleteddatetime"`
+	DepartmentID                string   `json:"departmentid"`
+	Description                 string   `json:"description"`
+	DocumentClass               string   `json:"documentclass"`
+	DocumentDescription         string   `json:"documentdescription"`
+	DocumentRoute               string   `json:"documentroute"`
+	DocumentSource              string   `json:"documentsource"`
+	DocumentSubclass            string   `json:"documentsubclass"`
+	DocumentTypeID              int      `json:"documenttypeid"`
+	EncounterID                 string   `json:"encounterid"`
+	ExternalAccessionID         string   `json:"externalaccessionid"`
+	ExternalNote                string   `json:"externalnote"`
+	FacilityID                  int      `json:"facilityid"`
+	InternalAccessionID         string   `json:"internalaccessionid"`
+	InternalNote                string   `json:"internalnote"`
+	LastModifiedDate            string   `json:"lastmodifieddate"`
+	LastModifiedDateTime        string   `json:"lastmodifieddatetime"`
+	LastModifiedUser            string   `json:"lastmodifieduser"`
+	LocalPatientID              string   `json:"localpatientid"`
+	ObservationDateTime         string   `json:"observationdatetime"`
+	OutboundOnly                string   `json:"outboundonly"`
+	PatientCaseAttachmentDetails []interface{} `json:"patientcaseattachmentdetails"`
+	PatientCaseAttachments      []string `json:"patientcaseattachments"`
+	PatientCaseID               string   `json:"patientcaseid"`
+	PatientID                   int      `json:"patientid"`
+	Priority                    string   `json:"priority"`
+	ProviderID                  int      `json:"providerid"`
+	ProviderUsername            string   `json:"providerusername"`
+	Status                      string   `json:"status"`
+	Subject                     string   `json:"subject"`
+	TiedToProcedureOrSurgery    string   `json:"tiedtoprocedureorsurgery"`
+	TieToOrderID                int      `json:"tietoorderid"`
+}
+
+type listChangedPatientCasesResponse struct {
+	ChangedPatientCases []*ChangedPatientCase `json:"patientcases"`
+
+	*PaginationResponse
+}
+
+type ListChangedPatientCasesResult struct {
+	ChangedPatientCases []*ChangedPatientCase `json:"changedpatientcases"`
+
+	Pagination *PaginationResult
+}
+
+// ListChangedPatientCases - List of changes in patient cases based on subscribed events
+//
+// GET /v1/{practiceid}/documents/patientcase/changed
+//
+// https://docs.athenahealth.com/api/api-ref/document-type-patient-case#Get-list-of-changes-in-patient-cases
+func (h *HTTPClient) ListChangedPatientCases(ctx context.Context, opts *ListChangedPatientCasesOptions) (*ListChangedPatientCasesResult, error) {
+	q := url.Values{}
+
+	if opts != nil {
+		if len(opts.PatientIDs) > 0 {
+			for _, patientID := range opts.PatientIDs {
+				q.Add("patientids", patientID)
+			}
+		}
+		if opts.LeaveUnprocessed {
+			q.Add("leaveunprocessed", strconv.FormatBool(opts.LeaveUnprocessed))
+		}
+		if !opts.ShowProcessedEndDatetime.IsZero() {
+			q.Add("showprocessedenddatetime", opts.ShowProcessedEndDatetime.Format("01/02/2006 15:04:05"))
+		}
+		if !opts.ShowProcessedStartDatetime.IsZero() {
+			q.Add("showprocessedstartdatetime", opts.ShowProcessedStartDatetime.Format("01/02/2006 15:04:05"))
+		}
+		if opts.Pagination != nil {
+			if opts.Pagination.Limit > 0 {
+				q.Add("limit", strconv.Itoa(opts.Pagination.Limit))
+			}
+
+			if opts.Pagination.Offset > 0 {
+				q.Add("offset", strconv.Itoa(opts.Pagination.Offset))
+			}
+		}
+	}
+	out := &listChangedPatientCasesResponse{}
+
+	_, err := h.Get(ctx, "/documents/patientcase/changed", q, out)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ListChangedPatientCasesResult{
+		ChangedPatientCases: out.ChangedPatientCases,
+		Pagination:          makePaginationResult(out.Next, out.Previous, out.TotalCount),
+	}, nil
 }
 
 type DeleteClinicalDocumentResponse struct {

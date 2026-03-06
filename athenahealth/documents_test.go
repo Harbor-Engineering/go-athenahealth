@@ -383,3 +383,32 @@ func TestHTTPClient_GetDocumentPage(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(expectedImage, imageData)
 }
+
+func TestHTTPClient_ListChangedPatientCases(t *testing.T) {
+	assert := assert.New(t)
+
+	leaveUnprocessed := true
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(strconv.FormatBool(leaveUnprocessed), r.URL.Query().Get("leaveunprocessed"))
+
+		b, _ := os.ReadFile("./resources/ListChangedPatientCases.json")
+		w.Write(b)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	opts := &ListChangedPatientCasesOptions{
+		LeaveUnprocessed: leaveUnprocessed,
+	}
+
+	res, err := athenaClient.ListChangedPatientCases(context.Background(), opts)
+	patientCases := res.ChangedPatientCases
+
+	assert.NoError(err)
+	assert.Len(patientCases, 3)
+	assert.Equal(3, res.Pagination.TotalCount)
+	assert.Len(patientCases, res.Pagination.TotalCount)
+}
+
