@@ -49,7 +49,17 @@ func ensurePatientCaseSubscription(t *testing.T, client *HTTPClient) bool {
 		t.Fatalf("Failed to subscribe to patient case changes: %v", err)
 	}
 
-	t.Log("Successfully subscribed to patient case changes")
+	// Verify subscription is now active
+	sub, err = client.GetSubscription(ctx, "documents/patientcase")
+	if err != nil {
+		t.Fatalf("Failed to verify subscription after subscribing: %v", err)
+	}
+
+	if sub.Status != "ACTIVE" {
+		t.Fatalf("Subscription status is %s after subscribing, expected ACTIVE", sub.Status)
+	}
+
+	t.Log("Successfully subscribed to patient case changes and verified ACTIVE status")
 	return true
 }
 
