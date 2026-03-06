@@ -88,7 +88,7 @@ func TestIntegration_ListChangedPatientCases_RawResponse(t *testing.T) {
 	TestRawAPIResponse(t, client, http.MethodGet, "/documents/patientcase/changed", params)
 }
 
-func TestIntegration_ListChangedPatientCases(t *testing.T) {
+func TestIntegration_ListChangedPatientCases_ClientResponse(t *testing.T) {
 	client := IntegrationTestClient(t)
 
 	// Ensure subscription is active
