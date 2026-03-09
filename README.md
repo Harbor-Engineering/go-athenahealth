@@ -113,10 +113,10 @@ git checkout internal
 git pull origin internal
 
 # Create and push the tag
-make release VERSION=v0.0.4
+make release VERSION=v0.0.11
 
 # Create the GitHub release (requires GitHub CLI)
-make github-release VERSION=v0.0.4
+make github-release VERSION=v0.0.11
 ```
 
 The release script will:

@@ -128,12 +128,24 @@ func TestIntegration_ListChangedPatientCases_ClientResponse(t *testing.T) {
 	if len(result.ChangedPatientCases) > 0 {
 		first := result.ChangedPatientCases[0]
 		t.Logf("First patient case:")
-		t.Logf("  PatientCaseID: %s", first.PatientCaseID)
-		t.Logf("  PatientID: %d", first.PatientID)
-		t.Logf("  Status: %s", first.Status)
-		t.Logf("  Subject: %s", first.Subject)
-		t.Logf("  DepartmentID: %s", first.DepartmentID)
-		t.Logf("  DocumentClass: %s", first.DocumentClass)
+		if first.PatientCaseID != nil {
+			t.Logf("  PatientCaseID: %s", *first.PatientCaseID)
+		}
+		if first.PatientID != nil {
+			t.Logf("  PatientID: %d", *first.PatientID)
+		}
+		if first.Status != nil {
+			t.Logf("  Status: %s", *first.Status)
+		}
+		if first.Subject != nil {
+			t.Logf("  Subject: %s", *first.Subject)
+		}
+		if first.DepartmentID != nil {
+			t.Logf("  DepartmentID: %s", *first.DepartmentID)
+		}
+		if first.DocumentClass != nil {
+			t.Logf("  DocumentClass: %s", *first.DocumentClass)
+		}
 	}
 }
 
@@ -180,8 +192,8 @@ func TestIntegration_ListChangedPatientCases_WithPatientIDs(t *testing.T) {
 	// All results should be for the specified patient
 	for i, pc := range result.ChangedPatientCases {
 		expectedID, _ := strconv.Atoi(patientID)
-		if pc.PatientID != expectedID {
-			t.Errorf("Result[%d]: Expected PatientID=%s, got %d", i, patientID, pc.PatientID)
+		if pc.PatientID != nil && *pc.PatientID != expectedID {
+			t.Errorf("Result[%d]: Expected PatientID=%s, got %d", i, patientID, *pc.PatientID)
 		}
 	}
 }
