@@ -1,0 +1,8 @@
+{
+  "status": "ACTIVE",
+  "subscriptions": [
+    {
+      "eventname": "UpdateOrder"
+    }
+  ]
+}
