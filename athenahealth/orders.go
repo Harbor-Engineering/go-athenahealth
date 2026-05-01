@@ -8,36 +8,29 @@ import (
 )
 
 type SignedOffOrder struct {
-	AssignedTo           *string `json:"assignedto"`
-	CreatedDate          *string `json:"createddate"`
-	CreatedDateTime      *string `json:"createddatetime"`
-	CreatedUser          *string `json:"createduser"`
-	DeletedDateTime      *string `json:"deleteddatetime"`
-	DepartmentID         *string `json:"departmentid"`
-	Description          *string `json:"description"`
-	DocumentClass        *string `json:"documentclass"`
-	DocumentRoute        *string `json:"documentroute"`
-	DocumentSource       *string `json:"documentsource"`
-	DocumentSubclass     *string `json:"documentsubclass"`
-	DocumentTypeID       *int    `json:"documenttypeid"`
-	EncounterID          *string `json:"encounterid"`
-	ExternalNote         *string `json:"externalnote"`
-	FacilityID           *int    `json:"facilityid"`
-	InternalNote         *string `json:"internalnote"`
-	LastModifiedDate     *string `json:"lastmodifieddate"`
-	LastModifiedDateTime *string `json:"lastmodifieddatetime"`
-	LastModifiedUser     *string `json:"lastmodifieduser"`
-	OrderID              *int    `json:"orderid"`
-	OrderType            *string `json:"ordertype"`
-	OrderTypeID          *int    `json:"ordertypeid"`
-	PatientID            *int    `json:"patientid"`
-	Priority             *string `json:"priority"`
-	ProviderID           *int    `json:"providerid"`
-	ProviderUsername     *string `json:"providerusername"`
-	SignedDate           *string `json:"signeddate"`
-	SignedDateTime       *string `json:"signeddatetime"`
-	Status               *string `json:"status"`
-	TieToOrderID         *int    `json:"tietoorderid"`
+	AdministerYN                  *string `json:"administeryn"`
+	ApprovedBy                    *string `json:"approvedby"`
+	ApprovedTimestamp             *string `json:"approvedtimestamp"`
+	AssignedUser                  *string `json:"assigneduser"`
+	Class                         *string `json:"class"`
+	ClassDescription              *string `json:"classdescription"`
+	ClinicalOrderTypeID           *int    `json:"clinicalordertypeid"`
+	ClinicalProviderOrderTypeID   *int    `json:"clinicalproviderordertypeid"`
+	DateOrdered                   *string `json:"dateordered"`
+	DeniedBy                      *string `json:"deniedby"`
+	DeniedTimestamp               *string `json:"deniedtimestamp"`
+	DepartmentID                  *int    `json:"departmentid"`
+	Description                   *string `json:"description"`
+	DocumentationOnly             *string `json:"documentationonly"`
+	DocumentID                    *int    `json:"documentid"`
+	EncounterID                   *int    `json:"encounterid"`
+	ExternalNote                  *string `json:"externalnote"`
+	LocalPatientID                *int    `json:"localpatientid"`
+	OrderGenusName                *string `json:"ordergenusname"`
+	OrderingProvider              *string `json:"orderingprovider"`
+	OutOfNetworkReason            *string `json:"outofnetworkreason"`
+	PatientID                     *int    `json:"patientid"`
+	Status                        *string `json:"status"`
 }
 
 type ListChangedSignedOffOrdersOptions struct {
@@ -64,7 +57,7 @@ type ListChangedSignedOffOrdersResult struct {
 
 // ListChangedSignedOffOrders - Get signed-off orders based on subscribed change events
 //
-// GET /v1/{practiceid}/orders/signedoff/changed
+// GET /v1/{practiceid}/orders/signedoff
 //
 // https://docs.athenahealth.com/api/api-ref/document-type-order#Get-signed-off-orders
 func (h *HTTPClient) ListChangedSignedOffOrders(ctx context.Context, opts *ListChangedSignedOffOrdersOptions) (*ListChangedSignedOffOrdersResult, error) {
@@ -98,7 +91,7 @@ func (h *HTTPClient) ListChangedSignedOffOrders(ctx context.Context, opts *ListC
 
 	out := &listChangedSignedOffOrdersResponse{}
 
-	_, err := h.Get(ctx, "/orders/signedoff/changed", q, out)
+	_, err := h.Get(ctx, "/orders/signedoff", q, out)
 	if err != nil {
 		return nil, err
 	}
@@ -111,13 +104,13 @@ func (h *HTTPClient) ListChangedSignedOffOrders(ctx context.Context, opts *ListC
 
 // GetSignedOffOrderSubscription - Get list of signed-off order change subscriptions
 //
-// GET /v1/{practiceid}/orders/signedoff/changed/subscription
+// GET /v1/{practiceid}/orders/signedoff/subscription
 //
 // https://docs.athenahealth.com/api/api-ref/document-type-order#Get-list-of-signed-off-order-change-subscription(s)
 func (h *HTTPClient) GetSignedOffOrderSubscription(ctx context.Context) (*Subscription, error) {
 	out := &Subscription{}
 
-	_, err := h.Get(ctx, "/orders/signedoff/changed/subscription", nil, out)
+	_, err := h.Get(ctx, "/orders/signedoff/subscription", nil, out)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +124,7 @@ type SubscribeSignedOffOrdersOptions struct {
 
 // SubscribeSignedOffOrders - Subscribe to all/specific change events for signed-off orders
 //
-// POST /v1/{practiceid}/orders/signedoff/changed/subscription
+// POST /v1/{practiceid}/orders/signedoff/subscription
 //
 // https://docs.athenahealth.com/api/api-ref/document-type-order#Subscribe-to-all/specific-change-events-for-signed-off-orders
 func (h *HTTPClient) SubscribeSignedOffOrders(ctx context.Context, opts *SubscribeSignedOffOrdersOptions) error {
@@ -142,13 +135,13 @@ func (h *HTTPClient) SubscribeSignedOffOrders(ctx context.Context, opts *Subscri
 		form.Add("eventname", opts.EventName)
 	}
 
-	_, err := h.PostForm(ctx, "/orders/signedoff/changed/subscription", form, nil)
+	_, err := h.PostForm(ctx, "/orders/signedoff/subscription", form, nil)
 	return err
 }
 
 // UnsubscribeSignedOffOrders - Unsubscribe from all/specific change events for signed-off orders
 //
-// DELETE /v1/{practiceid}/orders/signedoff/changed/subscription
+// DELETE /v1/{practiceid}/orders/signedoff/subscription
 //
 // https://docs.athenahealth.com/api/api-ref/document-type-order#Subscribe-to-all/specific-change-events-for-signed-off-orders
 func (h *HTTPClient) UnsubscribeSignedOffOrders(ctx context.Context, opts *SubscribeSignedOffOrdersOptions) error {
@@ -159,7 +152,7 @@ func (h *HTTPClient) UnsubscribeSignedOffOrders(ctx context.Context, opts *Subsc
 		form.Add("eventname", opts.EventName)
 	}
 
-	_, err := h.DeleteForm(ctx, "/orders/signedoff/changed/subscription", form, nil)
+	_, err := h.DeleteForm(ctx, "/orders/signedoff/subscription", form, nil)
 	return err
 }
 
