@@ -64,7 +64,7 @@ type ListChangedSignedOffOrdersResult struct {
 
 // ListChangedSignedOffOrders - Get signed-off orders based on subscribed change events
 //
-// GET /v1/{practiceid}/documents/order/signedoff/changed
+// GET /v1/{practiceid}/orders/signedoff/changed
 //
 // https://docs.athenahealth.com/api/api-ref/document-type-order#Get-signed-off-orders
 func (h *HTTPClient) ListChangedSignedOffOrders(ctx context.Context, opts *ListChangedSignedOffOrdersOptions) (*ListChangedSignedOffOrdersResult, error) {
@@ -98,7 +98,7 @@ func (h *HTTPClient) ListChangedSignedOffOrders(ctx context.Context, opts *ListC
 
 	out := &listChangedSignedOffOrdersResponse{}
 
-	_, err := h.Get(ctx, "/documents/order/signedoff/changed", q, out)
+	_, err := h.Get(ctx, "/orders/signedoff/changed", q, out)
 	if err != nil {
 		return nil, err
 	}
@@ -111,13 +111,13 @@ func (h *HTTPClient) ListChangedSignedOffOrders(ctx context.Context, opts *ListC
 
 // GetSignedOffOrderSubscription - Get list of signed-off order change subscriptions
 //
-// GET /v1/{practiceid}/documents/order/signedoff/changed/subscription
+// GET /v1/{practiceid}/orders/signedoff/changed/subscription
 //
 // https://docs.athenahealth.com/api/api-ref/document-type-order#Get-list-of-signed-off-order-change-subscription(s)
 func (h *HTTPClient) GetSignedOffOrderSubscription(ctx context.Context) (*Subscription, error) {
 	out := &Subscription{}
 
-	_, err := h.Get(ctx, "/documents/order/signedoff/changed/subscription", nil, out)
+	_, err := h.Get(ctx, "/orders/signedoff/changed/subscription", nil, out)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ type SubscribeSignedOffOrdersOptions struct {
 
 // SubscribeSignedOffOrders - Subscribe to all/specific change events for signed-off orders
 //
-// POST /v1/{practiceid}/documents/order/signedoff/changed/subscription
+// POST /v1/{practiceid}/orders/signedoff/changed/subscription
 //
 // https://docs.athenahealth.com/api/api-ref/document-type-order#Subscribe-to-all/specific-change-events-for-signed-off-orders
 func (h *HTTPClient) SubscribeSignedOffOrders(ctx context.Context, opts *SubscribeSignedOffOrdersOptions) error {
@@ -142,13 +142,13 @@ func (h *HTTPClient) SubscribeSignedOffOrders(ctx context.Context, opts *Subscri
 		form.Add("eventname", opts.EventName)
 	}
 
-	_, err := h.PostForm(ctx, "/documents/order/signedoff/changed/subscription", form, nil)
+	_, err := h.PostForm(ctx, "/orders/signedoff/changed/subscription", form, nil)
 	return err
 }
 
 // UnsubscribeSignedOffOrders - Unsubscribe from all/specific change events for signed-off orders
 //
-// DELETE /v1/{practiceid}/documents/order/signedoff/changed/subscription
+// DELETE /v1/{practiceid}/orders/signedoff/changed/subscription
 //
 // https://docs.athenahealth.com/api/api-ref/document-type-order#Subscribe-to-all/specific-change-events-for-signed-off-orders
 func (h *HTTPClient) UnsubscribeSignedOffOrders(ctx context.Context, opts *SubscribeSignedOffOrdersOptions) error {
@@ -159,7 +159,7 @@ func (h *HTTPClient) UnsubscribeSignedOffOrders(ctx context.Context, opts *Subsc
 		form.Add("eventname", opts.EventName)
 	}
 
-	_, err := h.DeleteForm(ctx, "/documents/order/signedoff/changed/subscription", form, nil)
+	_, err := h.DeleteForm(ctx, "/orders/signedoff/changed/subscription", form, nil)
 	return err
 }
 
