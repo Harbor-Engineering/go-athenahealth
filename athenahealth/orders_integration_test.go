@@ -153,5 +153,5 @@ func TestIntegration_AddOrderActionNote(t *testing.T) {
 	}
 
 	LogResponse(t, "AddOrderActionNote Result", result)
-	t.Logf("Success: %s", result.Success)
+	t.Logf("Success: %v", result.Success)
 }
