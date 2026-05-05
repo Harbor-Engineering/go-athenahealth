@@ -195,3 +195,63 @@ func TestHTTPClient_UnsubscribeOrders(t *testing.T) {
 	assert.NoError(err)
 	assert.True(called)
 }
+
+func TestHTTPClient_AddOrderActionNote(t *testing.T) {
+	assert := assert.New(t)
+
+	orderID := 12345
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(http.MethodPost, r.Method)
+		assert.Equal("/documents/order/12345/actions", r.URL.Path)
+
+		assert.NoError(r.ParseForm())
+		assert.Equal("Test action note", r.Form.Get("actionnote"))
+
+		b, _ := os.ReadFile("./resources/AddOrderActionNote.json")
+		w.Write(b)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	opts := &AddOrderActionNoteOptions{
+		ActionNote: "Test action note",
+	}
+
+	result, err := athenaClient.AddOrderActionNote(context.Background(), orderID, opts)
+
+	assert.NoError(err)
+	assert.NotNil(result)
+	assert.Equal("true", result.Success)
+	assert.NotNil(result.NewDocumentID)
+	assert.Equal("98765", *result.NewDocumentID)
+	assert.NotNil(result.VersionToken)
+	assert.Equal("abc123token", *result.VersionToken)
+}
+
+func TestHTTPClient_AddOrderActionNote_NilOpts(t *testing.T) {
+	assert := assert.New(t)
+
+	orderID := 12345
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(http.MethodPost, r.Method)
+		assert.Equal("/documents/order/12345/actions", r.URL.Path)
+
+		assert.NoError(r.ParseForm())
+		assert.Empty(r.Form.Get("actionnote"))
+
+		b, _ := os.ReadFile("./resources/AddOrderActionNote.json")
+		w.Write(b)
+	}
+
+	athenaClient, ts := testClient(h)
+	defer ts.Close()
+
+	result, err := athenaClient.AddOrderActionNote(context.Background(), orderID, nil)
+
+	assert.NoError(err)
+	assert.NotNil(result)
+	assert.Equal("true", result.Success)
+}

@@ -144,6 +144,7 @@ type Client interface {
 	GetOrderSubscription(ctx context.Context) (*Subscription, error)
 	SubscribeOrders(ctx context.Context, opts *SubscribeOrdersOptions) error
 	UnsubscribeOrders(ctx context.Context, opts *SubscribeOrdersOptions) error
+	AddOrderActionNote(ctx context.Context, orderID int, opts *AddOrderActionNoteOptions) (*AddOrderActionNoteResult, error)
 
 	// Prescriptions
 	UpdatePrescription(ctx context.Context, departmentID int, patientID int, documentID int, opts *UpdatePrescriptionOptions) (*UpdatePrescriptionResult, error)
