@@ -1,5 +1,5 @@
 {
-  "success": "true",
+  "success": true,
   "newdocumentid": "98765",
   "versiontoken": "abc123token"
 }

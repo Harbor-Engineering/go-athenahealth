@@ -223,7 +223,7 @@ func TestHTTPClient_AddOrderActionNote(t *testing.T) {
 
 	assert.NoError(err)
 	assert.NotNil(result)
-	assert.Equal("true", result.Success)
+	assert.Equal(true, result.Success)
 	assert.NotNil(result.NewDocumentID)
 	assert.Equal("98765", *result.NewDocumentID)
 	assert.NotNil(result.VersionToken)
@@ -253,5 +253,5 @@ func TestHTTPClient_AddOrderActionNote_NilOpts(t *testing.T) {
 
 	assert.NoError(err)
 	assert.NotNil(result)
-	assert.Equal("true", result.Success)
+	assert.Equal(true, result.Success)
 }

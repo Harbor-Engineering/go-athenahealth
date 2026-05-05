@@ -315,7 +315,7 @@ type AddOrderActionNoteOptions struct {
 type AddOrderActionNoteResult struct {
 	ErrorMessage  *string `json:"errormessage,omitempty"`
 	NewDocumentID *string `json:"newdocumentid,omitempty"`
-	Success       string  `json:"success"`
+	Success       bool    `json:"success"`
 	VersionToken  *string `json:"versiontoken,omitempty"`
 }
 
