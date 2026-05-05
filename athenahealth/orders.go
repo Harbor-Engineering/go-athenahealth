@@ -2,6 +2,7 @@ package athenahealth
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"strconv"
 	"time"
@@ -303,4 +304,36 @@ func (h *HTTPClient) UnsubscribeOrders(ctx context.Context, opts *SubscribeOrder
 
 	_, err := h.DeleteForm(ctx, "/orders/changed/subscription", form, nil)
 	return err
+}
+
+// AddOrderActionNoteOptions contains the options for AddOrderActionNote.
+type AddOrderActionNoteOptions struct {
+	ActionNote string
+}
+
+// AddOrderActionNoteResult is the response from AddOrderActionNote.
+type AddOrderActionNoteResult struct {
+	ErrorMessage  *string `json:"errormessage,omitempty"`
+	NewDocumentID *string `json:"newdocumentid,omitempty"`
+	Success       string  `json:"success"`
+	VersionToken  *string `json:"versiontoken,omitempty"`
+}
+
+// AddOrderActionNote adds an action note to an order document.
+//
+// POST /v1/{practiceid}/documents/order/{orderid}/actions
+//
+// https://docs.athenahealth.com/api/api-ref/document-type-order#Add-action-note-to-order
+func (h *HTTPClient) AddOrderActionNote(ctx context.Context, orderID int, opts *AddOrderActionNoteOptions) (*AddOrderActionNoteResult, error) {
+	form := url.Values{}
+	if opts != nil {
+		form.Add("actionnote", opts.ActionNote)
+	}
+
+	out := &AddOrderActionNoteResult{}
+	if _, err := h.PostForm(ctx, fmt.Sprintf("/documents/order/%d/actions", orderID), form, out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
 }

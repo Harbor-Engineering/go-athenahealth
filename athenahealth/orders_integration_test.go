@@ -2,6 +2,7 @@ package athenahealth
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -115,4 +116,42 @@ func TestIntegration_GetSignedOffOrderSubscription(t *testing.T) {
 	}
 
 	LogResponse(t, "GetSignedOffOrderSubscription Result", result)
+}
+
+func TestIntegration_AddOrderActionNote_RawResponse(t *testing.T) {
+	client := IntegrationTestClient(t)
+
+	orderID := mustGetEnvInt(t, "ATHENA_TEST_ORDER_ID", true)
+	if orderID == 0 {
+		t.Skip("ATHENA_TEST_ORDER_ID not set, skipping")
+	}
+
+	t.Logf("Testing POST /documents/order/%d/actions", orderID)
+
+	params := url.Values{}
+	params.Add("actionnote", "Integration test action note")
+
+	TestRawAPIResponse(t, client, http.MethodPost, fmt.Sprintf("/documents/order/%d/actions", orderID), params)
+}
+
+func TestIntegration_AddOrderActionNote(t *testing.T) {
+	client := IntegrationTestClient(t)
+
+	orderID := mustGetEnvInt(t, "ATHENA_TEST_ORDER_ID", true)
+	if orderID == 0 {
+		t.Skip("ATHENA_TEST_ORDER_ID not set, skipping")
+	}
+
+	ctx := context.Background()
+	opts := &AddOrderActionNoteOptions{
+		ActionNote: "Integration test action note",
+	}
+
+	result, err := client.AddOrderActionNote(ctx, orderID, opts)
+	if err != nil {
+		t.Fatalf("AddOrderActionNote failed: %v", err)
+	}
+
+	LogResponse(t, "AddOrderActionNote Result", result)
+	t.Logf("Success: %s", result.Success)
 }
