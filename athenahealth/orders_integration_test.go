@@ -72,12 +72,12 @@ func TestIntegration_GetOrderSubscription(t *testing.T) {
 func TestIntegration_ListChangedSignedOffOrders_RawResponse(t *testing.T) {
 	client := IntegrationTestClient(t)
 
-	t.Log("Testing GET /orders/signedoff/changed")
+	t.Log("Testing GET /orders/signedoff")
 
 	params := url.Values{}
 	params.Add("leaveunprocessed", "true")
 
-	TestRawAPIResponse(t, client, http.MethodGet, "/orders/signedoff/changed", params)
+	TestRawAPIResponse(t, client, http.MethodGet, "/orders/signedoff", params)
 }
 
 func TestIntegration_ListChangedSignedOffOrders(t *testing.T) {
@@ -100,9 +100,9 @@ func TestIntegration_ListChangedSignedOffOrders(t *testing.T) {
 func TestIntegration_GetSignedOffOrderSubscription_RawResponse(t *testing.T) {
 	client := IntegrationTestClient(t)
 
-	t.Log("Testing GET /orders/signedoff/changed/subscription")
+	t.Log("Testing GET /orders/signedoff/subscription")
 
-	TestRawAPIResponse(t, client, http.MethodGet, "/orders/signedoff/changed/subscription", nil)
+	TestRawAPIResponse(t, client, http.MethodGet, "/orders/signedoff/subscription", nil)
 }
 
 func TestIntegration_GetSignedOffOrderSubscription(t *testing.T) {
