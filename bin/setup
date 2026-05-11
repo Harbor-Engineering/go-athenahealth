@@ -1,17 +1,15 @@
-#!/usr/bin/env bash
+#! /usr/bin/env bash
 
 set -euo pipefail
 shopt -s globstar
 trap 'echo error: line $LINENO >&2' ERR
 # AGENTS: run bin/setup at session start if not already done — it is idempotent.
 
-# CLAUDE_CODE_REMOTE present means we're running as a cloud agent.
-is_cloud_agent() {
-  [[ "${CLAUDE_CODE_REMOTE:-}" == "true" ]]
-}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Install mise if missing, then install Go from .tool-versions and activate shims.
-install_toolchain() {
+# shellcheck shell=bash
+# Installs mise if missing, runs mise install, activates shims in PATH. Always call first.
+toolchain() {
   if ! command -v mise &>/dev/null; then
     curl https://mise.run | sh
     export PATH="$HOME/.local/bin:$PATH"
@@ -20,52 +18,59 @@ install_toolchain() {
   export PATH="$HOME/.local/share/mise/shims:$PATH"
 }
 
-if is_cloud_agent; then
-  install_toolchain
-else
-  echo "info: run 'mise install' to install Go (see .tool-versions)" >&2
-fi
-
-go mod download
-go install tool
-
-setup_gpg_signing() {
-  if [ -z "${GPG_PRIVATE_KEY:-}" ]; then
-    echo "bin/setup: GPG_PRIVATE_KEY not set, skipping"
+# shellcheck shell=bash
+# Imports GPG key and configures git signing; skips if no key.
+commit_signing() {
+  if [[ -z "${GPG_PRIVATE_KEY:-}" ]]; then
+    echo "bin/setup: GPG_PRIVATE_KEY not set, skipping" >&2
     return 0
   fi
 
   mkdir -p ~/.gnupg && chmod 700 ~/.gnupg
+  echo "allow-loopback-pinentry" >~/.gnupg/gpg-agent.conf
+  gpg-connect-agent reloadagent /bye >/dev/null 2>&1 || true
 
-  # Allow non-interactive signing
-  echo "allow-loopback-pinentry" > ~/.gnupg/gpg-agent.conf
-  gpg-connect-agent reloadagent /bye > /dev/null 2>&1 || true
-
-  if [ -n "${GPG_PASSPHRASE:-}" ]; then
-    echo "${GPG_PRIVATE_KEY}" | base64 --decode \
-      | gpg --batch --passphrase "${GPG_PASSPHRASE}" --pinentry-mode loopback --import
+  if [[ -n "${GPG_PASSPHRASE:-}" ]]; then
+    echo "${GPG_PRIVATE_KEY}" | base64 --decode |
+      gpg --batch --passphrase "${GPG_PASSPHRASE}" --pinentry-mode loopback --import
   else
     echo "${GPG_PRIVATE_KEY}" | base64 --decode | gpg --batch --import
   fi
 
-  FINGERPRINT=$(gpg --list-secret-keys --with-colons \
-    | awk -F: '/^fpr:/{print $10; exit}')
+  FINGERPRINT=$(gpg --list-secret-keys --with-colons |
+    awk -F: '/^fpr:/{print $10; exit}')
 
   git config --global user.signingkey "${FINGERPRINT}"
   git config --global commit.gpgsign true
   git config --global gpg.format openpgp
   git config --global gpg.program gpg
 
-  if [ -n "${GPG_PASSPHRASE:-}" ]; then
-    cat > /usr/local/bin/gpg-passphrase-wrapper <<WRAPPER
+  if [[ -n "${GPG_PASSPHRASE:-}" ]]; then
+    cat >/usr/local/bin/gpg-passphrase-wrapper <<'WRAPPER'
 #!/usr/bin/env bash
-exec gpg --batch --passphrase "${GPG_PASSPHRASE}" --pinentry-mode loopback "\$@"
+exec gpg --batch --passphrase "${GPG_PASSPHRASE}" --pinentry-mode loopback "$@"
 WRAPPER
     chmod +x /usr/local/bin/gpg-passphrase-wrapper
     git config --global gpg.program /usr/local/bin/gpg-passphrase-wrapper
   fi
 
-  echo "bin/setup: GPG signing configured (${FINGERPRINT})"
+  echo "bin/setup: GPG signing configured (${FINGERPRINT})" >&2
 }
 
-setup_gpg_signing
+# shellcheck shell=bash
+# Reroutes Go modules through goproxy.io if needed, then runs go mod download and go install tool.
+go_download() {
+  if ! curl -s --max-time 3 https://storage.googleapis.com >/dev/null 2>&1; then
+    export GOPROXY="https://goproxy.io,direct"
+    export GONOSUMDB="*"
+    echo "info: storage.googleapis.com unreachable, using GOPROXY=goproxy.io" >&2
+  fi
+  go mod download
+  go install tool 2>/dev/null || true
+}
+
+toolchain
+commit_signing
+go_download
+
+echo "setup complete"
