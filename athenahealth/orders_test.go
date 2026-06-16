@@ -32,6 +32,9 @@ func TestHTTPClient_ListChangedSignedOffOrders(t *testing.T) {
 	assert.NoError(err)
 	assert.Len(res.Orders, 2)
 	assert.Equal(2, res.Pagination.TotalCount)
+	// athenahealth returns documentationonly as either an empty string or a bool.
+	assert.Equal(FlexBool(false), *res.Orders[0].DocumentationOnly)
+	assert.Equal(FlexBool(false), *res.Orders[1].DocumentationOnly)
 }
 
 func TestHTTPClient_GetSignedOffOrderSubscription(t *testing.T) {
@@ -125,6 +128,9 @@ func TestHTTPClient_ListChangedOrders(t *testing.T) {
 	assert.NoError(err)
 	assert.Len(res.Orders, 2)
 	assert.Equal(2, res.Pagination.TotalCount)
+	// athenahealth returns documentationonly as either an empty string or a bool.
+	assert.Equal(FlexBool(false), *res.Orders[0].DocumentationOnly)
+	assert.Equal(FlexBool(true), *res.Orders[1].DocumentationOnly)
 }
 
 func TestHTTPClient_GetOrderSubscription(t *testing.T) {
