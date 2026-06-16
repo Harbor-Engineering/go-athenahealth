@@ -40,7 +40,7 @@
       "deniedtimestamp": null,
       "departmentid": 2,
       "description": "Chest X-Ray",
-      "documentationonly": "",
+      "documentationonly": false,
       "documentid": 5002,
       "encounterid": 101,
       "externalnote": "Priority imaging needed",

@@ -9,29 +9,29 @@ import (
 )
 
 type SignedOffOrder struct {
-	AdministerYN                  *string `json:"administeryn"`
-	ApprovedBy                    *string `json:"approvedby"`
-	ApprovedTimestamp             *string `json:"approvedtimestamp"`
-	AssignedUser                  *string `json:"assigneduser"`
-	Class                         *string `json:"class"`
-	ClassDescription              *string `json:"classdescription"`
-	ClinicalOrderTypeID           *int    `json:"clinicalordertypeid"`
-	ClinicalProviderOrderTypeID   *int    `json:"clinicalproviderordertypeid"`
-	DateOrdered                   *string `json:"dateordered"`
-	DeniedBy                      *string `json:"deniedby"`
-	DeniedTimestamp               *string `json:"deniedtimestamp"`
-	DepartmentID                  *int    `json:"departmentid"`
-	Description                   *string `json:"description"`
-	DocumentationOnly             *string `json:"documentationonly"`
-	DocumentID                    *int    `json:"documentid"`
-	EncounterID                   *int    `json:"encounterid"`
-	ExternalNote                  *string `json:"externalnote"`
-	LocalPatientID                *int    `json:"localpatientid"`
-	OrderGenusName                *string `json:"ordergenusname"`
-	OrderingProvider              *string `json:"orderingprovider"`
-	OutOfNetworkReason            *string `json:"outofnetworkreason"`
-	PatientID                     *int    `json:"patientid"`
-	Status                        *string `json:"status"`
+	AdministerYN                *string   `json:"administeryn"`
+	ApprovedBy                  *string   `json:"approvedby"`
+	ApprovedTimestamp           *string   `json:"approvedtimestamp"`
+	AssignedUser                *string   `json:"assigneduser"`
+	Class                       *string   `json:"class"`
+	ClassDescription            *string   `json:"classdescription"`
+	ClinicalOrderTypeID         *int      `json:"clinicalordertypeid"`
+	ClinicalProviderOrderTypeID *int      `json:"clinicalproviderordertypeid"`
+	DateOrdered                 *string   `json:"dateordered"`
+	DeniedBy                    *string   `json:"deniedby"`
+	DeniedTimestamp             *string   `json:"deniedtimestamp"`
+	DepartmentID                *int      `json:"departmentid"`
+	Description                 *string   `json:"description"`
+	DocumentationOnly           *FlexBool `json:"documentationonly"`
+	DocumentID                  *int      `json:"documentid"`
+	EncounterID                 *int      `json:"encounterid"`
+	ExternalNote                *string   `json:"externalnote"`
+	LocalPatientID              *int      `json:"localpatientid"`
+	OrderGenusName              *string   `json:"ordergenusname"`
+	OrderingProvider            *string   `json:"orderingprovider"`
+	OutOfNetworkReason          *string   `json:"outofnetworkreason"`
+	PatientID                   *int      `json:"patientid"`
+	Status                      *string   `json:"status"`
 }
 
 type ListChangedSignedOffOrdersOptions struct {
@@ -158,29 +158,29 @@ func (h *HTTPClient) UnsubscribeSignedOffOrders(ctx context.Context, opts *Subsc
 }
 
 type ChangedOrder struct {
-	AdministerYN                *string `json:"administeryn"`
-	ApprovedBy                  *string `json:"approvedby"`
-	ApprovedTimestamp           *string `json:"approvedtimestamp"`
-	AssignedUser                *string `json:"assigneduser"`
-	Class                       *string `json:"class"`
-	ClassDescription            *string `json:"classdescription"`
-	ClinicalOrderTypeID         *int    `json:"clinicalordertypeid"`
-	ClinicalProviderOrderTypeID *int    `json:"clinicalproviderordertypeid"`
-	DateOrdered                 *string `json:"dateordered"`
-	DeniedBy                    *string `json:"deniedby"`
-	DeniedTimestamp             *string `json:"deniedtimestamp"`
-	DepartmentID                *int    `json:"departmentid"`
-	Description                 *string `json:"description"`
-	DocumentationOnly           *string `json:"documentationonly"`
-	DocumentID                  *int    `json:"documentid"`
-	EncounterID                 *int    `json:"encounterid"`
-	ExternalNote                *string `json:"externalnote"`
-	LocalPatientID              *int    `json:"localpatientid"`
-	OrderGenusName              *string `json:"ordergenusname"`
-	OrderingProvider            *string `json:"orderingprovider"`
-	OutOfNetworkReason          *string `json:"outofnetworkreason"`
-	PatientID                   *int    `json:"patientid"`
-	Status                      *string `json:"status"`
+	AdministerYN                *string   `json:"administeryn"`
+	ApprovedBy                  *string   `json:"approvedby"`
+	ApprovedTimestamp           *string   `json:"approvedtimestamp"`
+	AssignedUser                *string   `json:"assigneduser"`
+	Class                       *string   `json:"class"`
+	ClassDescription            *string   `json:"classdescription"`
+	ClinicalOrderTypeID         *int      `json:"clinicalordertypeid"`
+	ClinicalProviderOrderTypeID *int      `json:"clinicalproviderordertypeid"`
+	DateOrdered                 *string   `json:"dateordered"`
+	DeniedBy                    *string   `json:"deniedby"`
+	DeniedTimestamp             *string   `json:"deniedtimestamp"`
+	DepartmentID                *int      `json:"departmentid"`
+	Description                 *string   `json:"description"`
+	DocumentationOnly           *FlexBool `json:"documentationonly"`
+	DocumentID                  *int      `json:"documentid"`
+	EncounterID                 *int      `json:"encounterid"`
+	ExternalNote                *string   `json:"externalnote"`
+	LocalPatientID              *int      `json:"localpatientid"`
+	OrderGenusName              *string   `json:"ordergenusname"`
+	OrderingProvider            *string   `json:"orderingprovider"`
+	OutOfNetworkReason          *string   `json:"outofnetworkreason"`
+	PatientID                   *int      `json:"patientid"`
+	Status                      *string   `json:"status"`
 }
 
 type ListChangedOrdersOptions struct {
