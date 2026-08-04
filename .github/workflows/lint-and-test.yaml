@@ -28,10 +28,25 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '1.22'
+      # harbor-github-actions is a private org repo that requires explicit access
+      # grants per consuming repo. Inlining the run-go-tests-and-publish action
+      # steps here until go-athenahealth is added to its allow-list.
+      # TODO: once Harbor-Engineering/harbor-github-actions grants access, replace
+      # these steps with:
+      #   uses: Harbor-Engineering/harbor-github-actions/harbor-health/actions/run-go-tests-and-publish@v1
+      - name: Install gotestsum
+        run: go install gotest.tools/gotestsum@v1.12.0
+      - name: Install Orchestrion (dd-trace-go compile-time instrumentation)
+        run: go install github.com/DataDog/orchestrion@v1.0.0
       - name: Run tests with CI Visibility
-        uses: Harbor-Engineering/harbor-github-actions/harbor-health/actions/run-go-tests-and-publish@v1
-        with:
-          enable-dd-trace: true
-          datadog-service: go-athenahealth
-          datadog-api-key: ${{ secrets.DD_API_KEY }}
-          datadog-extra-tags: 'team:platform layer:ehr-client'
+        env:
+          DD_CIVISIBILITY_AGENTLESS_ENABLED: "true"
+          DD_SERVICE: go-athenahealth
+          DD_ENV: ci
+          DD_VERSION: ${{ github.sha }}
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_TAGS: "team:platform,layer:ehr-client"
+        run: |
+          gobin="$(go env GOBIN)"
+          [[ -z "$gobin" ]] && gobin="$(go env GOPATH)/bin"
+          gotestsum --format testdox -- -toolexec "$gobin/orchestrion toolexec" -race ./...
