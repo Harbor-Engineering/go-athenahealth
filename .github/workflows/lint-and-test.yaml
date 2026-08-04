@@ -14,7 +14,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@5c56cd6c9dc07901af25baab6f2b0d9f3b7c3018 # v2
+        uses: golangci/golangci-lint-action@d583c34f0599d37dbac4a198b9c83201be380893 # v9.3.0
         with:
           version: v2.12.2
           args: --timeout=5m --tests=false
