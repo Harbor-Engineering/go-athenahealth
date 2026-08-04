@@ -24,8 +24,14 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: unit tests
+      - name: setup go
         uses: actions/setup-go@v2
         with:
           go-version: '1.22'
-      - run: go test ./...
+      - name: Run tests with CI Visibility
+        uses: Harbor-Engineering/harbor-github-actions/harbor-health/actions/run-go-tests-and-publish@v1
+        with:
+          enable-dd-trace: true
+          datadog-service: go-athenahealth
+          datadog-api-key: ${{ secrets.DD_API_KEY }}
+          datadog-extra-tags: 'team:platform layer:ehr-client'
