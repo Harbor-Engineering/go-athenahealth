@@ -12,9 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@5c56cd6c9dc07901af25baab6f2b0d9f3b7c3018 # v2
         with:
           version: latest
           args: --timeout=5m --tests=false
@@ -23,9 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2
       - name: setup go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2
         with:
           go-version: '1.22'
       # harbor-github-actions is a private org repo that requires explicit access
@@ -36,17 +36,21 @@ jobs:
       #   uses: Harbor-Engineering/harbor-github-actions/harbor-health/actions/run-go-tests-and-publish@v1
       - name: Install gotestsum
         run: go install gotest.tools/gotestsum@v1.12.0
-      - name: Install Orchestrion (dd-trace-go compile-time instrumentation)
-        run: go install github.com/DataDog/orchestrion@v1.0.0
-      - name: Run tests with CI Visibility
+      - name: Run tests
         env:
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
           DD_CIVISIBILITY_AGENTLESS_ENABLED: "true"
           DD_SERVICE: go-athenahealth
           DD_ENV: ci
           DD_VERSION: ${{ github.sha }}
-          DD_API_KEY: ${{ secrets.DD_API_KEY }}
           DD_TAGS: "team:platform,layer:ehr-client"
         run: |
           gobin="$(go env GOBIN)"
           [[ -z "$gobin" ]] && gobin="$(go env GOPATH)/bin"
-          gotestsum --format testdox -- -toolexec "$gobin/orchestrion toolexec" -race ./...
+          if [[ -n "$DD_API_KEY" ]]; then
+            go install github.com/DataDog/orchestrion@v1.0.0
+            gotestsum --format testdox -- -toolexec "$gobin/orchestrion toolexec" -race ./...
+          else
+            echo "::notice::DD_API_KEY not set — running without CI Visibility (forked PR or secret not provisioned)"
+            gotestsum --format testdox -- -race ./...
+          fi
