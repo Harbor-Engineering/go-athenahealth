@@ -16,7 +16,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@5c56cd6c9dc07901af25baab6f2b0d9f3b7c3018 # v2
         with:
-          version: latest
+          version: v2.12.2
           args: --timeout=5m --tests=false
   test:
     name: unit tests
@@ -39,7 +39,6 @@ jobs:
       - name: Run tests
         env:
           DD_API_KEY: ${{ secrets.DD_API_KEY }}
-          DD_CIVISIBILITY_AGENTLESS_ENABLED: "true"
           DD_SERVICE: go-athenahealth
           DD_ENV: ci
           DD_VERSION: ${{ github.sha }}
@@ -48,6 +47,7 @@ jobs:
           gobin="$(go env GOBIN)"
           [[ -z "$gobin" ]] && gobin="$(go env GOPATH)/bin"
           if [[ -n "$DD_API_KEY" ]]; then
+            export DD_CIVISIBILITY_AGENTLESS_ENABLED=true
             go install github.com/DataDog/orchestrion@v1.0.0
             gotestsum --format testdox -- -toolexec "$gobin/orchestrion toolexec" -race ./...
           else
