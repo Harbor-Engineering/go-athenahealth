@@ -12,20 +12,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: golangci-lint
         uses: golangci/golangci-lint-action@d583c34f0599d37dbac4a198b9c83201be380893 # v9.3.0
         with:
           version: v2.12.2
-          args: --timeout=5m --tests=false
+          args: --timeout=5m
   test:
     name: unit tests
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: setup go
-        uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: '1.22'
       # harbor-github-actions is a private org repo that requires explicit access
@@ -34,23 +34,29 @@ jobs:
       # TODO: once Harbor-Engineering/harbor-github-actions grants access, replace
       # these steps with:
       #   uses: Harbor-Engineering/harbor-github-actions/harbor-health/actions/run-go-tests-and-publish@v1
+      # Note: the composite action also uploads JUnit XML artifacts and publishes a
+      # job summary via publish-test-summary — those steps are not inlined here.
       - name: Install gotestsum
+        if: github.event_name == 'pull_request'
         run: go install gotest.tools/gotestsum@v1.12.0
-      - name: Run tests
+      - name: Run tests (with CI Visibility)
+        if: github.event_name == 'push'
         env:
           DD_API_KEY: ${{ secrets.DD_API_KEY }}
           DD_SERVICE: go-athenahealth
           DD_ENV: ci
           DD_VERSION: ${{ github.sha }}
+          DD_SITE: datadoghq.com
           DD_TAGS: "team:platform,layer:ehr-client"
+          DD_CIVISIBILITY_AGENTLESS_ENABLED: "true"
+          DD_CIVISIBILITY_LOGS_ENABLED: "false"
         run: |
-          gobin="$(go env GOBIN)"
-          [[ -z "$gobin" ]] && gobin="$(go env GOPATH)/bin"
-          if [[ -n "$DD_API_KEY" ]]; then
-            export DD_CIVISIBILITY_AGENTLESS_ENABLED=true
-            go install github.com/DataDog/orchestrion@v1.0.0
-            gotestsum --format testdox -- -toolexec "$gobin/orchestrion toolexec" -race ./...
-          else
-            echo "::notice::DD_API_KEY not set — running without CI Visibility (forked PR or secret not provisioned)"
-            gotestsum --format testdox -- -race ./...
+          if [[ -z "$DD_API_KEY" ]]; then
+            echo "::error::DD_API_KEY secret is not provisioned in this repo — see PLATENG-354"
+            exit 1
           fi
+          go install github.com/DataDog/orchestrion@v1.12.0
+          orchestrion go test -race ./...
+      - name: Run tests
+        if: github.event_name == 'pull_request'
+        run: gotestsum --format testdox -- -race ./...
