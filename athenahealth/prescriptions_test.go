@@ -19,7 +19,7 @@ func TestHTTPClient_ListChangedPrescriptions(t *testing.T) {
 		assert.Equal(strconv.FormatBool(leaveUnprocessed), r.URL.Query().Get("leaveunprocessed"))
 
 		b, _ := os.ReadFile("./resources/ListChangedPrescriptions.json")
-		w.Write(b)
+		_, _ = w.Write(b)
 	}
 
 	athenaClient, ts := testClient(h)
