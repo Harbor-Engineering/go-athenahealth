@@ -126,7 +126,7 @@ func TestHTTPClient_UpdatePatientPhoto(t *testing.T) {
 	data := []byte("Hello World!")
 
 	h := func(w http.ResponseWriter, r *http.Request) {
-		r.ParseForm()
+		assert.NoError(r.ParseForm())
 
 		assert.Equal(base64.StdEncoding.EncodeToString(data), r.Form.Get("image"))
 	}

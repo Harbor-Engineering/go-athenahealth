@@ -160,8 +160,14 @@ func (h *HTTPClient) request(ctx context.Context, method, path string, body io.R
 
 	h.requestLock.Unlock()
 
+	var requestBodyLength int64
 	if body != nil {
-		body = newSizeRecordingReader(body)
+		data, err := io.ReadAll(body)
+		if err != nil {
+			return nil, err
+		}
+		requestBodyLength = int64(len(data))
+		body = bytes.NewReader(data)
 	}
 	req, err := http.NewRequestWithContext(ctx, method, reqURL, body)
 	if err != nil {
@@ -201,11 +207,6 @@ func (h *HTTPClient) request(ctx context.Context, method, path string, body io.R
 		return res, err
 	}
 	defer func() { _ = res.Body.Close() }()
-
-	var requestBodyLength int64
-	if srBody, ok := body.(*sizeRecordingReader); ok {
-		requestBodyLength = srBody.size
-	}
 
 	requestDuration := time.Since(requestStart)
 
@@ -274,24 +275,6 @@ func (h *HTTPClient) request(ctx context.Context, method, path string, body io.R
 	}
 
 	return res, nil
-}
-
-type sizeRecordingReader struct {
-	r    io.Reader
-	size int64
-}
-
-func newSizeRecordingReader(r io.Reader) *sizeRecordingReader {
-	return &sizeRecordingReader{
-		r:    r,
-		size: 0,
-	}
-}
-
-func (srr *sizeRecordingReader) Read(p []byte) (int, error) {
-	n, err := srr.r.Read(p)
-	srr.size += int64(n)
-	return n, err
 }
 
 func (h *HTTPClient) WithLogger(logger *zerolog.Logger) *HTTPClient {

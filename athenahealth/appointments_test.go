@@ -113,7 +113,7 @@ func TestHTTPClient_CreateAppointmentNote(t *testing.T) {
 	called := false
 	h := func(w http.ResponseWriter, r *http.Request) {
 		reqBody, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 
 		assert.Contains(string(reqBody), "notetext=test+note")
 
@@ -163,7 +163,7 @@ func TestHTTPClient_UpdateAppointmentNote(t *testing.T) {
 	called := false
 	h := func(w http.ResponseWriter, r *http.Request) {
 		reqBody, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 
 		assert.Contains(string(reqBody), "notetext=test+note")
 		assert.Contains(string(reqBody), "noteid=2")
@@ -192,7 +192,7 @@ func TestHTTPClient_DeleteAppointmentNote(t *testing.T) {
 	called := false
 	h := func(w http.ResponseWriter, r *http.Request) {
 		reqBody, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 
 		assert.Contains(string(reqBody), "noteid=1")
 
@@ -279,7 +279,7 @@ func TestHTTPClient_BookAppointment(t *testing.T) {
 
 	h := func(w http.ResponseWriter, r *http.Request) {
 		reqBody, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 
 		assert.Contains(string(reqBody), "appointmenttypeid=3")
 		assert.Contains(string(reqBody), "bookingnote=Hello+World%21")
