@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/eleanorhealth/go-athenahealth/athenahealth/ratelimiter"
@@ -160,14 +161,10 @@ func (h *HTTPClient) request(ctx context.Context, method, path string, body io.R
 
 	h.requestLock.Unlock()
 
-	var requestBodyLength int64
+	var srBody *sizeRecordingReader
 	if body != nil {
-		data, err := io.ReadAll(body)
-		if err != nil {
-			return nil, err
-		}
-		requestBodyLength = int64(len(data))
-		body = bytes.NewReader(data)
+		srBody = newSizeRecordingReader(body)
+		body = srBody
 	}
 	req, err := http.NewRequestWithContext(ctx, method, reqURL, body)
 	if err != nil {
@@ -237,6 +234,11 @@ func (h *HTTPClient) request(ctx context.Context, method, path string, body io.R
 
 	res.Body = io.NopCloser(bytes.NewBuffer(resBody))
 
+	var requestBodyLength int64
+	if srBody != nil {
+		requestBodyLength = srBody.size.Load()
+	}
+
 	h.logger.Info().
 		Str("method", method).
 		Str("url", reqURL).
@@ -275,6 +277,21 @@ func (h *HTTPClient) request(ctx context.Context, method, path string, body io.R
 	}
 
 	return res, nil
+}
+
+type sizeRecordingReader struct {
+	r    io.Reader
+	size atomic.Int64
+}
+
+func newSizeRecordingReader(r io.Reader) *sizeRecordingReader {
+	return &sizeRecordingReader{r: r}
+}
+
+func (srr *sizeRecordingReader) Read(p []byte) (int, error) {
+	n, err := srr.r.Read(p)
+	srr.size.Add(int64(n))
+	return n, err
 }
 
 func (h *HTTPClient) WithLogger(logger *zerolog.Logger) *HTTPClient {

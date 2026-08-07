@@ -27,7 +27,7 @@ jobs:
       - name: setup go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.22'
+          go-version: '1.25'
       # harbor-github-actions is a private org repo that requires explicit access
       # grants per consuming repo. Inlining the run-go-tests-and-publish action
       # steps here until go-athenahealth is added to its allow-list.
@@ -52,11 +52,13 @@ jobs:
           DD_CIVISIBILITY_LOGS_ENABLED: "false"
         run: |
           if [[ -z "$DD_API_KEY" ]]; then
-            echo "::error::DD_API_KEY secret is not provisioned in this repo — see PLATENG-354"
-            exit 1
+            echo "::notice::DD_API_KEY not provisioned — running without CI Visibility (see PLATENG-354)"
+            go install gotest.tools/gotestsum@v1.12.0
+            gotestsum --format testdox -- -race ./...
+          else
+            go install github.com/DataDog/orchestrion@v1.12.0
+            orchestrion go test -race ./...
           fi
-          go install github.com/DataDog/orchestrion@v1.12.0
-          orchestrion go test -race ./...
       - name: Run tests
         if: github.event_name == 'pull_request'
         run: gotestsum --format testdox -- -race ./...
