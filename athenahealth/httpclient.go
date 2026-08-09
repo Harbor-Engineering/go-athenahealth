@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/eleanorhealth/go-athenahealth/athenahealth/ratelimiter"
@@ -160,8 +161,10 @@ func (h *HTTPClient) request(ctx context.Context, method, path string, body io.R
 
 	h.requestLock.Unlock()
 
+	var srBody *sizeRecordingReader
 	if body != nil {
-		body = newSizeRecordingReader(body)
+		srBody = newSizeRecordingReader(body)
+		body = srBody
 	}
 	req, err := http.NewRequestWithContext(ctx, method, reqURL, body)
 	if err != nil {
@@ -200,12 +203,7 @@ func (h *HTTPClient) request(ctx context.Context, method, path string, body io.R
 	if err != nil {
 		return res, err
 	}
-	defer res.Body.Close()
-
-	var requestBodyLength int64
-	if srBody, ok := body.(*sizeRecordingReader); ok {
-		requestBodyLength = srBody.size
-	}
+	defer func() { _ = res.Body.Close() }()
 
 	requestDuration := time.Since(requestStart)
 
@@ -232,9 +230,14 @@ func (h *HTTPClient) request(ctx context.Context, method, path string, body io.R
 		return res, err
 	}
 	// close original req.Body before before overwriting
-	res.Body.Close()
+	_ = res.Body.Close()
 
 	res.Body = io.NopCloser(bytes.NewBuffer(resBody))
+
+	var requestBodyLength int64
+	if srBody != nil {
+		requestBodyLength = srBody.size.Load()
+	}
 
 	h.logger.Info().
 		Str("method", method).
@@ -278,19 +281,16 @@ func (h *HTTPClient) request(ctx context.Context, method, path string, body io.R
 
 type sizeRecordingReader struct {
 	r    io.Reader
-	size int64
+	size atomic.Int64
 }
 
 func newSizeRecordingReader(r io.Reader) *sizeRecordingReader {
-	return &sizeRecordingReader{
-		r:    r,
-		size: 0,
-	}
+	return &sizeRecordingReader{r: r}
 }
 
 func (srr *sizeRecordingReader) Read(p []byte) (int, error) {
 	n, err := srr.r.Read(p)
-	srr.size += int64(n)
+	srr.size.Add(int64(n))
 	return n, err
 }
 

@@ -12,20 +12,53 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@d583c34f0599d37dbac4a198b9c83201be380893 # v9.3.0
         with:
-          version: latest
-          args: --timeout=5m --tests=false
+          version: v2.12.2
+          args: --timeout=5m
   test:
     name: unit tests
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
-      - name: unit tests
-        uses: actions/setup-go@v2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: setup go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.22'
-      - run: go test ./...
+          go-version: '1.25'
+      # harbor-github-actions is a private org repo that requires explicit access
+      # grants per consuming repo. Inlining the run-go-tests-and-publish action
+      # steps here until go-athenahealth is added to its allow-list.
+      # TODO: once Harbor-Engineering/harbor-github-actions grants access, replace
+      # these steps with:
+      #   uses: Harbor-Engineering/harbor-github-actions/harbor-health/actions/run-go-tests-and-publish@v1
+      # Note: the composite action also uploads JUnit XML artifacts and publishes a
+      # job summary via publish-test-summary — those steps are not inlined here.
+      - name: Install gotestsum
+        if: github.event_name == 'pull_request'
+        run: go install gotest.tools/gotestsum@v1.13.0
+      - name: Run tests (with CI Visibility)
+        if: github.event_name == 'push'
+        env:
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_SERVICE: go-athenahealth
+          DD_ENV: ci
+          DD_VERSION: ${{ github.sha }}
+          DD_SITE: datadoghq.com
+          DD_TAGS: "team:platform,layer:ehr-client"
+          DD_CIVISIBILITY_AGENTLESS_ENABLED: "true"
+          DD_CIVISIBILITY_LOGS_ENABLED: "false"
+        run: |
+          if [[ -z "$DD_API_KEY" ]]; then
+            echo "::notice::DD_API_KEY not provisioned — running without CI Visibility (see PLATENG-354)"
+            go install gotest.tools/gotestsum@v1.13.0
+            gotestsum --format testdox -- -race ./...
+          else
+            go install github.com/DataDog/orchestrion@v1.12.0
+            orchestrion go test -race ./...
+          fi
+      - name: Run tests
+        if: github.event_name == 'pull_request'
+        run: gotestsum --format testdox -- -race ./...
