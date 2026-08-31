@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"io"
 	"net/http"
 	"os"
@@ -38,6 +39,33 @@ func TestHTTPClient_ListAdminDocuments(t *testing.T) {
 	assert.Equal(res.Pagination.PreviousOffset, 10)
 	assert.Equal(res.Pagination.TotalCount, 1)
 	assert.NoError(err)
+}
+
+func TestDocument_UnmarshalJSON_DepartmentID(t *testing.T) {
+	tests := []struct {
+		name     string
+		response string
+		wantID   string
+		wantErr  bool
+	}{
+		{name: "string", response: `{"departmentid":"123"}`, wantID: "123"},
+		{name: "number", response: `{"departmentid":123}`, wantID: "123"},
+		{name: "large number", response: `{"departmentid":12345678901234567890}`, wantID: "12345678901234567890"},
+		{name: "boolean is invalid", response: `{"departmentid":true}`, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var document Document
+			err := json.Unmarshal([]byte(tt.response), &document)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("json.Unmarshal() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if document.DepartmentID != tt.wantID {
+				t.Errorf("DepartmentID = %q, want %q", document.DepartmentID, tt.wantID)
+			}
+		})
+	}
 }
 
 func TestHTTPClient_AddDocument(t *testing.T) {
@@ -411,4 +439,3 @@ func TestHTTPClient_ListChangedPatientCases(t *testing.T) {
 	assert.Equal(3, res.Pagination.TotalCount)
 	assert.Len(patientCases, res.Pagination.TotalCount)
 }
-

@@ -3,6 +3,7 @@ package athenahealth
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -899,6 +900,37 @@ type Document struct {
 	// Document content
 	OriginalDocument *DocumentAsset `json:"originaldocument,omitempty"`
 	Pages            []DocumentPage `json:"pages,omitempty"`
+}
+
+// UnmarshalJSON accepts Athena's inconsistent departmentid representation
+// while keeping Document.DepartmentID's public type as string.
+func (d *Document) UnmarshalJSON(data []byte) error {
+	type documentAlias Document
+	type documentResponse struct {
+		*documentAlias
+		DepartmentID json.RawMessage `json:"departmentid"`
+	}
+
+	response := documentResponse{documentAlias: (*documentAlias)(d)}
+	if err := json.Unmarshal(data, &response); err != nil {
+		return err
+	}
+	if len(response.DepartmentID) == 0 || string(response.DepartmentID) == "null" {
+		return nil
+	}
+
+	var departmentID string
+	if err := json.Unmarshal(response.DepartmentID, &departmentID); err == nil {
+		d.DepartmentID = departmentID
+		return nil
+	}
+
+	var number json.Number
+	if err := json.Unmarshal(response.DepartmentID, &number); err != nil {
+		return fmt.Errorf("unmarshal departmentid: expected string or number: %w", err)
+	}
+	d.DepartmentID = number.String()
+	return nil
 }
 
 type documentsApiResponse []Document
